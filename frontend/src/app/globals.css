@@ -1,0 +1,111 @@
+/* ─── OpenDyslexic stub — loaded only when accessibility toggle is active ──── */
+@font-face {
+  font-family: "OpenDyslexic";
+  src: url("/fonts/OpenDyslexic-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "OpenDyslexic";
+  src: url("/fonts/OpenDyslexic-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── Tailwind layers ────────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties (design tokens) ─────────────────────────────── */
+:root {
+  /* Pastel palette */
+  --color-sky-pastel:      #E0F2FE;
+  --color-sky-accent:      #7DD3FC;
+  --color-mint-pastel:     #D1FAE5;
+  --color-mint-accent:     #6EE7B7;
+  --color-lavender-pastel: #EDE9FE;
+  --color-lavender-accent: #C4B5FD;
+  --color-peach-pastel:    #FEE2E2;
+  --color-peach-accent:    #FCA5A5;
+  --color-sunshine-pastel: #FEF9C3;
+  --color-sunshine-accent: #FDE047;
+  --color-page-bg:         #F8F7FF;
+
+  /* Typography */
+  --font-primary:   "Lexend", sans-serif;
+  --font-dyslexic:  "OpenDyslexic", sans-serif;
+  --font-size-body: 18px;
+  --font-size-game: 24px;
+  --font-size-target: 36px;
+  --letter-spacing: 0.05em;
+  --word-spacing:   0.1em;
+  --line-height:    1.8;
+
+  /* Radii */
+  --radius-card:   1.5rem;
+  --radius-button: 9999px;
+}
+
+/* ─── Base reset ─────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-page-bg);
+  font-family: var(--font-primary);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+  word-spacing: var(--word-spacing);
+  color: #1e1b4b; /* deep indigo — softer than pure black */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Accessibility: OpenDyslexic mode (toggled via data attribute) ──────── */
+[data-font="opendyslexic"] body,
+[data-font="opendyslexic"] * {
+  font-family: var(--font-dyslexic) !important;
+}
+
+/* ─── Dyslexia reading helpers ───────────────────────────────────────────── */
+/* Only apply max-width to content paragraphs, NOT inline/UI elements */
+.prose p, .prose li, article p {
+  max-width: 65ch;
+}
+
+/* ─── Focus ring (accessible, not harsh) ────────────────────────────────── */
+:focus-visible {
+  outline: 3px solid var(--color-lavender-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ─── Utility: No error red — never use .text-red-* in this project ──────── */
+/* All error states use peach palette instead */
+.error-text  { color: #c2410c; } /* orange-700 */
+.error-bg    { background-color: var(--color-peach-pastel); }
+.error-border{ border-color: var(--color-peach-accent); }
+
+/* ─── Touch targets — only buttons & links, NOT form inputs ──────────────── */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ─── Scrollbar (subtle) ─────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--color-lavender-accent); border-radius: 9999px; }

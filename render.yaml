@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: dyslex-backend
+    env: node
+    region: oregon
+    buildCommand: "cd backend && npm install && npm run build"
+    startCommand: "cd backend && npm start"
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      # Note: backend does NOT call OpenAI directly — it calls the AI service.
+      # OPENAI_API_KEY is not needed here.
+      - key: AI_SERVICE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: dyslex-ai
+    env: docker
+    region: oregon
+    dockerfilePath: ./ai-service/Dockerfile
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: BACKEND_URL
+        sync: false

@@ -1,0 +1,12 @@
+{
+  "name": "dyslex-ai",
+  "version": "1.0.0",
+  "description": "DysLex AI — Adaptive gamified learning platform for children with dyslexia",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:ai": "cd ai-service && uvicorn main:app --reload --port 8000",
+    "install:all": "cd frontend && npm install && cd ../backend && npm install"
+  }
+}
