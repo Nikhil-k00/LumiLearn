@@ -1,4 +1,4 @@
-# DysLex AI
+# LumiLearn
 
 **Adaptive, multi-agent, gamified learning platform for children with dyslexia (ages 4–14).**
 
