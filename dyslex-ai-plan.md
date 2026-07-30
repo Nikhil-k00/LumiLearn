@@ -1,8 +1,8 @@
-# DysLex AI — Hackathon MVP Plan
+# LumiLearn — Hackathon MVP Plan
 
 ## Top-Level Overview
 
-**Goal:** Build DysLex AI — an adaptive, multi-agent, gamified learning platform specifically engineered for children with dyslexia (ages 4–14). The platform's core thesis is that **the games are the therapy** — every mechanic directly addresses a clinical dyslexia deficit (phonological awareness, working memory, reading fluency, letter reversal confusion).
+**Goal:** Build LumiLearn — an adaptive, multi-agent, gamified learning platform specifically engineered for children with dyslexia (ages 4–14). The platform's core thesis is that **the games are the therapy** — every mechanic directly addresses a clinical dyslexia deficit (phonological awareness, working memory, reading fluency, letter reversal confusion).
 
 **Scope (MVP):**
 - Student registration + JWT auth + learning profile creation
