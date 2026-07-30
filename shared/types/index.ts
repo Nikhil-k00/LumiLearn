@@ -64,6 +64,11 @@ export interface LearningProfile {
     writing: DifficultyLevel;
     phonics: DifficultyLevel;
   };
+  goodSessionStreak: {
+    reading: number;
+    memory: number;
+    phonics: number;
+  };
   updatedAt: string;
 }
 

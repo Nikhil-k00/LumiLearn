@@ -29,9 +29,6 @@ export interface ILearningProfile extends Document {
   currentDifficulty: ICurrentDifficulty;
   // Consecutive ≥80% session count per domain — difficulty only advances at 2+
   goodSessionStreak: IGoodSessionStreak;
-  // Sessions played since the last GPT-4o Recommendation was generated.
-  // The recommendation agent is only called every 3rd session to save API credits.
-  sessionsSinceLastRecommendation: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,9 +65,6 @@ const LearningProfileSchema = new Schema<ILearningProfile>(
       memory:  streakField,
       phonics: streakField,
     },
-    // How many sessions have been played since the last full GPT-4o recommendation.
-    // Recommendation agent is only invoked every 3 sessions — saves ~66% of GPT-4o credits.
-    sessionsSinceLastRecommendation: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }
 );

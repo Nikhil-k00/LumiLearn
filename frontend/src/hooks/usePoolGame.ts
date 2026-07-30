@@ -2,24 +2,21 @@
 /**
  * usePoolGame
  *
- * Two-phase strategy — ensures students always see DIFFERENT questions:
+ * Three-phase strategy:
  *
- *   Phase 1 — First page load (including every login / return visit):
+ *   Phase 1 — First page load / return visit (peek):
  *     • Calls GET /api/games/pool/:gameType/peek  ← reads WITHOUT consuming.
- *     • The pool slot is NOT used up — the same fresh item will be available
- *       next time the student logs in and opens this game.
- *     • Shows a brief spinner while peek is in-flight (max 4s), then static fallback.
+ *     • Shows whatever is the current unconsumed item in the pool.
  *
- *   Phase 2 — After a session is submitted ("Play Again"):
- *     • Calls GET /api/games/pool/:gameType  ← reads AND consumes.
- *     • Marks the item as consumed so it is never served again.
- *     • Triggers background refill so the next "Play Again" is also ready.
- *     • Polls every POLL_INTERVAL ms if pool is empty, auto-enables button.
+ *   Phase 2 — Section completed (consumeAndPreload):
+ *     • Called immediately when the student finishes all 3 mini-games.
+ *     • Calls GET /api/games/pool/:gameType  ← consumes current item, loads next.
+ *     • Next time student opens this section, peek returns the NEW item.
+ *     • Play Again also uses this already-loaded next item instantly.
  *
- * This guarantees:
- *   - Opening a game never wastes a pool slot.
- *   - Repeated logins show the same next-up AI game (not a new one each time).
- *   - "Play Again" always delivers a genuinely new game the student hasn't seen.
+ *   Phase 3 — Play Again (peek):
+ *     • Just peeks — the next item was already consumed+loaded in Phase 2.
+ *     • No extra pop needed — student gets the preloaded content immediately.
  */
 
 import { useState, useRef, useCallback } from "react";
@@ -34,18 +31,18 @@ type GameType = "phonics_adventure" | "word_quest" | "memory_challenge";
 
 interface UsePoolGameResult<T> {
   /** AI-generated level content, or null if pool was empty / not yet fetched */
-  dynamicLevel:   T | null;
-  /** True while the initial peek request is still in-flight */
-  peekLoading:    boolean;
+  dynamicLevel:    T | null;
+  /** True while a fetch is still in-flight */
+  peekLoading:     boolean;
   /** True when it's safe to show "Play Again" — always true on first play */
-  nextLevelReady: boolean;
-  /**
-   * Call on mount (isFirstLoad=true) to peek without consuming.
-   * Call after session submit (isFirstLoad=false) to pop and consume.
-   */
-  fetchFromPool:  (isFirstLoad?: boolean) => void;
-  /** Clear the current AI level (call when restarting so stale content is dropped) */
-  clearLevel:     () => void;
+  nextLevelReady:  boolean;
+  /** Call on mount (showSpinner=false) to silently load AI content over static.
+   *  Call after Play Again (showSpinner=true) to gate render until new content loads. */
+  peekPool:        (showSpinner?: boolean) => void;
+  /** Call when all 3 mini-games complete — consumes current item, preloads next */
+  consumeAndPreload: () => void;
+  /** Clear the current AI level so Play Again mounts with fresh content */
+  clearLevel:      () => void;
 }
 
 export function usePoolGame<T>(gameType: GameType, userId?: string): UsePoolGameResult<T> {
@@ -63,69 +60,57 @@ export function usePoolGame<T>(gameType: GameType, userId?: string): UsePoolGame
     pollCount.current = 0;
   };
 
-  const fetchFromPool = useCallback((isFirstLoad = false) => {
+  // ── Phase 1: PEEK on mount — silent, never blocks static content ───────────
+  // Static offline content starts immediately. AI content silently replaces it
+  // when the peek responds. Pass showSpinner=true only after Play Again when
+  // dynamicLevel was explicitly cleared and we want to gate the mini-game mount.
+  const peekPool = useCallback((showSpinner = false) => {
     stopPolling();
+    if (!userId) { setNextLevelReady(true); return; }
 
-    if (!userId) {
-      setNextLevelReady(true);
-      return;
-    }
+    if (showSpinner) setPeekLoading(true);
+    setNextLevelReady(true);
 
-    if (isFirstLoad) {
-      // ── Phase 1: PEEK (no consume) ─────────────────────────────────────────
-      // Gate game rendering briefly while the peek is in-flight so the mini-game
-      // always initialises with AI data, not static fallback data.
-      // If peek takes > PEEK_TIMEOUT ms, fall through to static content.
-      setPeekLoading(true);
-      setNextLevelReady(true);
+    peekTimer.current = setTimeout(() => { setPeekLoading(false); }, PEEK_TIMEOUT);
 
-      // Safety timeout — never block the game longer than PEEK_TIMEOUT
-      peekTimer.current = setTimeout(() => {
-        setPeekLoading(false);
-      }, PEEK_TIMEOUT);
+    api.get(`/api/games/pool/${gameType}/peek`)
+      .then((res) => {
+        clearTimeout(peekTimer.current!);
+        peekTimer.current = null;
+        if (res.data?.success && res.data.game?.content) {
+          setDynamicLevel(res.data.game.content as T);
+        }
+      })
+      .catch(() => { /* silent — static fallback continues */ })
+      .finally(() => { setPeekLoading(false); });
+  }, [gameType, userId]);
 
-      api.get(`/api/games/pool/${gameType}/peek`)
-        .then((res) => {
-          clearTimeout(peekTimer.current!);
-          peekTimer.current = null;
-          if (res.data?.success && res.data.game?.content) {
-            setDynamicLevel(res.data.game.content as T);
-          }
-        })
-        .catch(() => { /* silent — static content will show */ })
-        .finally(() => { setPeekLoading(false); });
-      return;
-    }
+  // ── Phase 2: CONSUME + PRELOAD — called at section completion ──────────────
+  // Consumes the current pool item (so next visit shows a new game) and
+  // preloads the next item into state so Play Again is instant.
+  const consumeAndPreload = useCallback(() => {
+    stopPolling();
+    if (!userId) return;
 
-    // ── Phase 2: POP (consume) — "Play Again" ──────────────────────────────
-    // Student completed a session. Pop the next item (marks it consumed so
-    // it is never repeated). Gate mini-game rendering until content arrives
-    // so mini-games never mount with stale static data.
     setNextLevelReady(false);
-    setPeekLoading(true);   // gate mini-game mount while we wait for pop
 
     const attempt = () => {
       api.get(`/api/games/pool/${gameType}`)
         .then((res) => {
           if (res.data?.success && res.data.game?.content) {
             setDynamicLevel(res.data.game.content as T);
-            setPeekLoading(false);
             setNextLevelReady(true);
           } else {
-            // Pool refilling — keep polling
+            // Pool still refilling — poll until ready
             pollCount.current += 1;
             if (pollCount.current >= MAX_POLLS) {
-              setPeekLoading(false);   // timed out — fall back to static
-              setNextLevelReady(true);
+              setNextLevelReady(true); // timed out — Play Again will use static fallback
             } else {
               pollTimer.current = setTimeout(attempt, POLL_INTERVAL);
             }
           }
         })
-        .catch(() => {
-          setPeekLoading(false);
-          setNextLevelReady(true);   // network error — unblock
-        });
+        .catch(() => { setNextLevelReady(true); });
     };
 
     attempt();
@@ -136,5 +121,5 @@ export function usePoolGame<T>(gameType: GameType, userId?: string): UsePoolGame
     setPeekLoading(false);
   }, []);
 
-  return { dynamicLevel, peekLoading, nextLevelReady, fetchFromPool, clearLevel };
+  return { dynamicLevel, peekLoading, nextLevelReady, peekPool, consumeAndPreload, clearLevel };
 }

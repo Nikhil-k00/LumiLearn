@@ -8,8 +8,8 @@ export const getStudentDashboard = async (req: Request, res: Response): Promise<
   try {
     const { id } = req.params;
 
-    // S3 — IDOR guard: a student can only view their own dashboard; parents can view any
-    if (req.user?.id !== id && req.user?.role !== "parent") {
+    // S3 — IDOR guard: a student can only view their own data
+    if (req.user?.id !== id) {
       res.status(403).json({ success: false, message: "Forbidden" });
       return;
     }
@@ -33,7 +33,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     const { id } = req.params;
 
     // Guard: student can only update their own profile
-    if (req.user?.id !== id && req.user?.role !== "parent") {
+    if (req.user?.id !== id) {
       res.status(403).json({ success: false, message: "Forbidden" });
       return;
     }

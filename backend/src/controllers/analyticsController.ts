@@ -6,8 +6,8 @@ export const getAnalytics = async (req: Request, res: Response): Promise<void> =
   try {
     const { id } = req.params;
 
-    // S4 — IDOR guard: a student can only view their own analytics; parents can view any
-    if (req.user?.id !== id && req.user?.role !== "parent") {
+    // S4 — IDOR guard: a student can only view their own analytics
+    if (req.user?.id !== id) {
       res.status(403).json({ success: false, message: "Forbidden" });
       return;
     }

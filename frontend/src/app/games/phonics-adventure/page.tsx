@@ -45,7 +45,7 @@ export default function PhonicsAdventurePage() {
   const [newBadges, setNewBadges]        = useState<NewBadge[]>([]);
   const [roundKey, setRoundKey]          = useState(0);
 
-  const { dynamicLevel, peekLoading, nextLevelReady, fetchFromPool, clearLevel } =
+  const { dynamicLevel, peekLoading, nextLevelReady, peekPool, consumeAndPreload, clearLevel } =
     usePoolGame<PhonicsLevel>("phonics_adventure", user?.id);
 
   // Set difficulty from dashboard data when it loads
@@ -55,9 +55,9 @@ export default function PhonicsAdventurePage() {
     }
   }, [dashboardData?.profile?.currentDifficulty?.phonics]);
 
-  // On mount: try pool once but don't block — static data plays immediately
+  // On mount: silently fetch AI content in background — static data plays immediately
   useEffect(() => {
-    fetchFromPool(true);
+    peekPool(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -86,6 +86,11 @@ export default function PhonicsAdventurePage() {
       setTopConfusions(Object.entries(pairs).sort(([, a], [, b]) => b - a).map(([p]) => p).slice(0, 2));
       setPhase("complete");
 
+      // Consume current pool item + preload next immediately — independent of
+      // session submit. This way the next visit to this section shows a new game
+      // even if the student goes home instead of clicking Play Again.
+      consumeAndPreload();
+
       api.post("/api/games/session", {
         studentId: user?.id,
         gameType: "phonics_adventure",
@@ -103,14 +108,11 @@ export default function PhonicsAdventurePage() {
         }
         if (res.data?.newBadges?.length) {
           setNewBadges(res.data.newBadges);
-          // Announce the first badge by voice
           speak(`You earned the ${res.data.newBadges[0].name} badge!`);
         }
         refetchDashboard();
-        // Poll pool until AI-generated game is ready — button auto-lights up
-        fetchFromPool(false);
       })
-      .catch(() => fetchFromPool(false));
+      .catch(() => {});
     }
   };
 
@@ -120,16 +122,16 @@ export default function PhonicsAdventurePage() {
     setPhase("playing");
   };
 
-  // Restart the full 3-game sequence from the beginning
+  // Restart the full 3-game sequence — new content already preloaded by consumeAndPreload
   const restartSequence = () => {
     reset();
-    clearLevel();            // drop stale AI level so next pool item loads fresh
+    clearLevel();            // clear stale level so peek re-loads the preloaded item
     setGameIndex(0);
     setRoundKey((k) => k + 1);
     setPhase("playing");
     setAiMessage("");
     setNewBadges([]);
-    fetchFromPool(false);    // consume next pool item — student played, earn fresh AI game
+    peekPool(true);          // showSpinner=true: dynamicLevel was cleared, gate until AI loads
   };
 
   const currentGame = GAME_SEQUENCE[gameIndex];

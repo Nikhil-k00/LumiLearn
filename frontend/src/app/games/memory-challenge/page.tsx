@@ -45,7 +45,7 @@ export default function MemoryChallengePage() {
   const [newBadges, setNewBadges]   = useState<NewBadge[]>([]);
   const [roundKey, setRoundKey]     = useState(0);
 
-  const { dynamicLevel, peekLoading, nextLevelReady, fetchFromPool, clearLevel } =
+  const { dynamicLevel, peekLoading, nextLevelReady, peekPool, consumeAndPreload, clearLevel } =
     usePoolGame<MemoryLevel>("memory_challenge", user?.id);
 
   useEffect(() => {
@@ -54,9 +54,9 @@ export default function MemoryChallengePage() {
     }
   }, [dashboardData?.profile?.currentDifficulty?.memory]);
 
-  // On mount: try pool once but don't block — static data plays immediately
+  // On mount: silently fetch AI content in background — static data plays immediately
   useEffect(() => {
-    fetchFromPool(true);
+    peekPool(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -71,6 +71,9 @@ export default function MemoryChallengePage() {
     } else {
       // All 3 done — submit and show final screen
       setPhase("complete");
+
+      // Consume current pool item + preload next immediately
+      consumeAndPreload();
 
       api.post("/api/games/session", {
         studentId: user?.id,
@@ -95,9 +98,8 @@ export default function MemoryChallengePage() {
           speak(`You earned the ${res.data.newBadges[0].name} badge!`);
         }
         refetchDashboard();
-        fetchFromPool(false);
       })
-      .catch(() => fetchFromPool(false));
+      .catch(() => {});
     }
   };
 
@@ -108,13 +110,13 @@ export default function MemoryChallengePage() {
 
   const restartSequence = () => {
     reset();
-    clearLevel();
+    clearLevel();            // clear stale level so peek re-loads the preloaded item
     setGameIndex(0);
     setRoundKey((k) => k + 1);
     setPhase("playing");
     setAiMessage("");
     setNewBadges([]);
-    fetchFromPool(false);    // consume next pool item — student played, earn fresh AI game
+    peekPool(true);          // showSpinner=true: dynamicLevel was cleared, gate until AI loads
   };
 
   const currentGame = GAME_SEQUENCE[gameIndex];

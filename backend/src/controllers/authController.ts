@@ -192,8 +192,8 @@ export const submitAssessment = async (req: Request, res: Response): Promise<voi
   try {
     const { studentId } = req.params;
 
-    // S5 — IDOR guard: a student can only submit their own assessment; parents can submit for any
-    if (req.user?.id !== studentId && req.user?.role !== "parent") {
+    // S5 — IDOR guard: a student can only submit their own assessment
+    if (req.user?.id !== studentId) {
       res.status(403).json({ success: false, message: "Forbidden" });
       return;
     }
