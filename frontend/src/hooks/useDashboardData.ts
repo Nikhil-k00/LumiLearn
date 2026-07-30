@@ -21,7 +21,6 @@ export interface ProfileData {
   weakAreas: string[];
   strongAreas?: string[];
   currentDifficulty?: Record<string, number>;
-  currentMission?: string;
 }
 
 export interface DashboardData {

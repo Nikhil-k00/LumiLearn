@@ -56,7 +56,6 @@ export interface LearningProfile {
   commonErrors: string[];
   weakAreas: string[];
   strongAreas: string[];
-  currentMission?: string;
   currentDifficulty: {
     reading: DifficultyLevel;
     speech: DifficultyLevel;
@@ -99,9 +98,7 @@ export interface AnalyticsEntry {
   studentId: string;
   date: string; // YYYY-MM-DD
   readingAccuracy: number;
-  pronunciationScore: number;
   memoryScore: number;
-  writingScore: number;
   phonicsScore: number;
   sessionTime: number; // total seconds
   totalGamesPlayed: number;
@@ -120,24 +117,3 @@ export interface Achievement {
   earnedAt: string;
 }
 
-// ─── AI / Recommendations ─────────────────────────────────────────────────────
-
-export interface Activity {
-  id: string;
-  title: string;
-  description: string;
-  gameType: GameType;
-  targetArea: string;
-  difficulty: DifficultyLevel;
-  estimatedMinutes: number;
-}
-
-export interface Recommendation {
-  _id: string;
-  studentId: string;
-  generatedAt: string;
-  activities: Activity[];
-  focusAreas: string[];
-  difficultyAdjustments: Partial<LearningProfile["currentDifficulty"]>;
-  gptResponseRaw?: string;
-}

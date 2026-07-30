@@ -216,9 +216,8 @@ export const submitGameSession = async (req: Request, res: Response): Promise<vo
       }
     }
 
-    // Derive weak/strong areas from the latest scores so the recommendation
-    // agent always has up-to-date context. A domain is weak if score < 50,
-    // strong if score > 70.
+    // Derive weak/strong areas from the latest scores.
+    // A domain is weak if score < 50, strong if score > 70.
     const latestScores: Record<string, number> = {
       phonics:  (scoreUpdates.phonicsScore  as number) ?? profile.phonicsScore,
       reading:  (scoreUpdates.readingScore  as number) ?? profile.readingScore,

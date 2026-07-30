@@ -25,7 +25,6 @@ export interface ILearningProfile extends Document {
   commonErrors: string[];
   weakAreas: string[];
   strongAreas: string[];
-  currentMission?: string;
   currentDifficulty: ICurrentDifficulty;
   // Consecutive ≥80% session count per domain — difficulty only advances at 2+
   goodSessionStreak: IGoodSessionStreak;
@@ -51,7 +50,6 @@ const LearningProfileSchema = new Schema<ILearningProfile>(
     commonErrors:   [{ type: String }],
     weakAreas:      [{ type: String }],
     strongAreas:    [{ type: String }],
-    currentMission: { type: String },
     currentDifficulty: {
       reading: difficultyField,
       speech:  difficultyField,

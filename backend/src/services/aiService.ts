@@ -31,15 +31,6 @@ const aiService = {
     );
     return data;
   },
-
-  async analyzeAudio(formData: FormData): Promise<unknown> {
-    const { data } = await axios.post(
-      `${AI_SERVICE_URL}/api/speech/analyze`,
-      formData,
-      { timeout: 20000, headers: { "Content-Type": "multipart/form-data" } }
-    );
-    return data;
-  },
 };
 
 export default aiService;

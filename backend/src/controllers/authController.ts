@@ -83,8 +83,7 @@ export const registerStudent = async (req: Request, res: Response): Promise<void
       },
       { upsert: true, new: true }
     );
-    // Seed the game pool in the background — generates 10 AI games per game type.
-    // This is the only AI call at registration; no separate recommendation needed.
+    // Seed game pool in background — generates 10 AI games per game type
     seedPoolForNewStudent(String(student._id));
     const token = signToken({ id: String(student._id), role: "student", name: student.name });
 

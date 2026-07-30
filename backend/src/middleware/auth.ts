@@ -27,12 +27,3 @@ export const protect = (req: Request, res: Response, next: NextFunction): void =
     res.status(401).json({ success: false, message: "Invalid or expired token" });
   }
 };
-
-export const requireRole = (...roles: string[]) =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      res.status(403).json({ success: false, message: "Forbidden: insufficient role" });
-      return;
-    }
-    next();
-  };

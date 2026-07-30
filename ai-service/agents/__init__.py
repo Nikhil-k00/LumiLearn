@@ -4,6 +4,4 @@
 #   phonics_agent.py        — letter confusion tracking (b/d, p/q, m/w, n/u)
 #   reading_agent.py        — reading fluency & TTS usage analysis
 #   memory_agent.py         — auditory/visual memory trainer
-#   recommendation_agent.py — GPT-4o personalized activity recommendations
-# NOTE: speech_agent.py is NOT present in this package. Speech analysis is
-#       handled by a dedicated route outside the orchestrator flow.
+#   recommendation_agent.py — GPT-4o game content generator (words, stories, rhymes)

@@ -30,10 +30,3 @@ export const getLevelFromXP = (totalXP: number): number => {
   return 1;
 };
 
-/**
- * Return the XP required to reach the next level, or the max threshold if already at cap.
- */
-export const getXPForNextLevel = (currentLevel: number): number => {
-  const nextIndex = currentLevel; // currentLevel is 1-based; threshold index for next level
-  return nextIndex < LEVEL_THRESHOLDS.length ? LEVEL_THRESHOLDS[nextIndex] : LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
-};

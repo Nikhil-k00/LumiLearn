@@ -4,9 +4,7 @@ export interface IAnalyticsEntry extends Document {
   studentId: Types.ObjectId;
   date: string;
   readingAccuracy: number;
-  pronunciationScore: number;
   memoryScore: number;
-  writingScore: number;
   phonicsScore: number;
   sessionTime: number;
   totalGamesPlayed: number;
@@ -20,9 +18,7 @@ const AnalyticsEntrySchema = new Schema<IAnalyticsEntry>(
     studentId:          { type: Schema.Types.ObjectId, ref: "Student", required: true },
     date:               { type: String, required: true },
     readingAccuracy:    { type: Number, min: 0, max: 100, default: 0 },
-    pronunciationScore: { type: Number, min: 0, max: 100, default: 0 },
     memoryScore:        { type: Number, min: 0, max: 100, default: 0 },
-    writingScore:       { type: Number, min: 0, max: 100, default: 0 },
     phonicsScore:       { type: Number, min: 0, max: 100, default: 0 },
     sessionTime:        { type: Number, default: 0 },
     totalGamesPlayed:   { type: Number, default: 0 },

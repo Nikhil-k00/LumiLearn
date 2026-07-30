@@ -17,7 +17,7 @@ interface DashboardData {
   };
   profile: {
     phonicsScore: number; readingScore: number; memoryScore: number;
-    weakAreas: string[]; currentMission?: string;
+    weakAreas: string[];
   } | null;
   recentAchievements: { name: string; emoji: string }[];
 }
@@ -178,9 +178,7 @@ export default function StudentDashboard() {
                 </button>
               </div>
               <p className="text-[15px] text-indigo-600 mt-0.5">
-                {profile?.currentMission
-                  ? `Today's mission: ${profile.currentMission}`
-                  : "Ready for today's adventure? Pick a game below!"}
+                Ready for today&apos;s adventure? Pick a game below!
               </p>
 
               {/* XP bar */}
@@ -304,30 +302,20 @@ export default function StudentDashboard() {
         {/* ── BOTTOM ROW: Achievements + Mission ──────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* Today's mission */}
+          {/* Stats card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
             className="bg-sunshine-pastel rounded-card border-2 border-sunshine-accent/60 p-6 shadow-card"
           >
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3 mb-4">
               <motion.span
                 animate={{ scale: [1, 1.15, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
                 className="text-3xl"
-              >🎯</motion.span>
-              <h3 className="text-[16px] font-bold text-amber-800">Today&apos;s Mission</h3>
-              {profile?.currentMission && (
-                <button onClick={() => speak(profile.currentMission!)}
-                  className="ml-auto p-1.5 rounded-full bg-white/70"
-                  style={{ minHeight: "unset", minWidth: "unset" }}>
-                  <Volume2 size={13} className="text-amber-600" />
-                </button>
-              )}
+              >🏆</motion.span>
+              <h3 className="text-[16px] font-bold text-amber-800">Your Progress</h3>
             </div>
-            <p className="text-[15px] text-indigo-800 font-medium leading-relaxed">
-              {profile?.currentMission || "Complete a game to unlock your personalised mission! 🚀"}
-            </p>
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-3">
               <div className="flex-1 bg-white/60 rounded-xl px-4 py-3 text-center">
                 <p className="text-[11px] text-amber-600 font-semibold uppercase">Streak</p>
                 <p className="text-[22px] font-bold text-indigo-900">🔥 {student.streak}</p>
