@@ -17,7 +17,7 @@ function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 
 const DEFAULT_BEGINNING_SOUNDS: BeginningSound[] = [
   {
     phoneme: "/b/",
-    ttsText: "buh",
+    ttsText: "b, as in ball",
     options: [
       { word: "ball",  emoji: "⚽", isCorrect: true  },
       { word: "cat",   emoji: "🐱", isCorrect: false },
@@ -26,7 +26,7 @@ const DEFAULT_BEGINNING_SOUNDS: BeginningSound[] = [
   },
   {
     phoneme: "/s/",
-    ttsText: "sss",
+    ttsText: "s, as in sun",
     options: [
       { word: "sun",   emoji: "☀️", isCorrect: true  },
       { word: "hat",   emoji: "🎩", isCorrect: false },
@@ -35,7 +35,7 @@ const DEFAULT_BEGINNING_SOUNDS: BeginningSound[] = [
   },
   {
     phoneme: "/d/",
-    ttsText: "duh",
+    ttsText: "d, as in duck",
     options: [
       { word: "duck",  emoji: "🦆", isCorrect: true  },
       { word: "ball",  emoji: "⚽", isCorrect: false },
@@ -44,7 +44,7 @@ const DEFAULT_BEGINNING_SOUNDS: BeginningSound[] = [
   },
   {
     phoneme: "/m/",
-    ttsText: "mmm",
+    ttsText: "m, as in moon",
     options: [
       { word: "moon",  emoji: "🌙", isCorrect: true  },
       { word: "duck",  emoji: "🦆", isCorrect: false },
@@ -53,7 +53,7 @@ const DEFAULT_BEGINNING_SOUNDS: BeginningSound[] = [
   },
   {
     phoneme: "/h/",
-    ttsText: "huh",
+    ttsText: "h, as in hat",
     options: [
       { word: "hat",   emoji: "🎩", isCorrect: true  },
       { word: "dog",   emoji: "🐶", isCorrect: false },
@@ -62,7 +62,7 @@ const DEFAULT_BEGINNING_SOUNDS: BeginningSound[] = [
   },
   {
     phoneme: "/r/",
-    ttsText: "rrr",
+    ttsText: "r, as in rain",
     options: [
       { word: "rain",  emoji: "🌧️", isCorrect: true  },
       { word: "ball",  emoji: "⚽", isCorrect: false },

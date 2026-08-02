@@ -62,6 +62,9 @@ export default function WordQuestPage() {
 
   const staticLevel = getWordQuestLevel(difficulty);
   const activeLevel = dynamicLevel ?? staticLevel;
+  // Force mini-game remount when AI content arrives — their useState initializers
+  // only run once at mount, so changing the key is the only way to get new content.
+  const levelSource = dynamicLevel ? "ai" : "static";
   const xp = calculateXP(session.accuracy, difficulty, session.attempts);
 
   // Called when a single mini-game finishes all its questions
@@ -194,21 +197,21 @@ export default function WordQuestPage() {
 
           {/* ── Active mini-game ─────────────────────────────────────────── */}
           {phase === "playing" && !peekLoading && currentGame === "picture-match" && (
-            <motion.div key={`pm-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`pm-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <PictureWordMatch pairs={activeLevel.wordPicturePairs} onAnswer={recordAnswer}
                 onRoundComplete={handleMiniGameComplete} onTTSUse={recordTTSUsage} />
             </motion.div>
           )}
 
           {phase === "playing" && !peekLoading && currentGame === "sentence-build" && (
-            <motion.div key={`sb-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`sb-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <SentenceBuilder sentences={activeLevel.sentences} onAnswer={recordAnswer}
                 onRoundComplete={handleMiniGameComplete} onTTSUse={recordTTSUsage} />
             </motion.div>
           )}
 
           {phase === "playing" && !peekLoading && currentGame === "story-read" && (
-            <motion.div key={`sr-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`sr-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <StoryReader stories={activeLevel.stories} onAnswer={recordAnswer}
                 onRoundComplete={handleMiniGameComplete} onTTSUse={recordTTSUsage} />
             </motion.div>

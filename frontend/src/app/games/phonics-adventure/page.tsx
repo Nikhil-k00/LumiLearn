@@ -63,9 +63,11 @@ export default function PhonicsAdventurePage() {
 
   const staticLevel = getPhonicsLevel(difficulty);
   // Use AI content if loaded, otherwise static fallback.
-  // peekLoading=true means the peek is still in-flight — mini-games are gated
-  // below so they never mount with stale staticLevel data.
   const activeLevel = dynamicLevel ?? staticLevel;
+  // Track whether we have AI content so mini-game keys can change when it arrives.
+  // Mini-games capture `words` in their useState initializer (runs once at mount),
+  // so we must force a remount when dynamicLevel first becomes available.
+  const levelSource = dynamicLevel ? "ai" : "static";
   const xp = calculateXP(session.accuracy, difficulty, session.attempts);
 
   // Called when a single mini-game finishes all its questions
@@ -215,7 +217,7 @@ export default function PhonicsAdventurePage() {
 
           {/* ── Active mini-game ─────────────────────────────────────────── */}
           {phase === "playing" && !peekLoading && currentGame === "sound-match" && (
-            <motion.div key={`sm-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`sm-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <SoundMatchGame
                 words={activeLevel.words}
                 onAnswer={recordAnswer}
@@ -225,7 +227,7 @@ export default function PhonicsAdventurePage() {
           )}
 
           {phase === "playing" && !peekLoading && currentGame === "build-word" && (
-            <motion.div key={`bw-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`bw-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <BuildAWordGame
                 words={activeLevel.words}
                 onAnswer={recordAnswer}
@@ -235,7 +237,7 @@ export default function PhonicsAdventurePage() {
           )}
 
           {phase === "playing" && !peekLoading && currentGame === "missing-letter" && (
-            <motion.div key={`ml-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`ml-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <MissingLetterGame
                 words={activeLevel.words}
                 confusionPairs={activeLevel.confusionPairs}

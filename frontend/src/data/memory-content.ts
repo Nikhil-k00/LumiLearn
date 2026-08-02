@@ -79,7 +79,7 @@ export const MEMORY_LEVEL_1: MemoryLevel = {
   beginningSound: [
     {
       phoneme: "/b/",
-      ttsText: "buh",
+      ttsText: "b, as in ball",
       options: [
         { word: "ball",  emoji: "⚽", isCorrect: true  },
         { word: "cat",   emoji: "🐱", isCorrect: false },
@@ -88,7 +88,7 @@ export const MEMORY_LEVEL_1: MemoryLevel = {
     },
     {
       phoneme: "/s/",
-      ttsText: "sss",
+      ttsText: "s, as in sun",
       options: [
         { word: "sun",   emoji: "☀️", isCorrect: true  },
         { word: "hat",   emoji: "🎩", isCorrect: false },
@@ -97,7 +97,7 @@ export const MEMORY_LEVEL_1: MemoryLevel = {
     },
     {
       phoneme: "/d/",
-      ttsText: "duh",
+      ttsText: "d, as in duck",
       options: [
         { word: "duck",  emoji: "🦆", isCorrect: true  },
         { word: "ball",  emoji: "⚽", isCorrect: false },
@@ -106,7 +106,7 @@ export const MEMORY_LEVEL_1: MemoryLevel = {
     },
     {
       phoneme: "/m/",
-      ttsText: "mmm",
+      ttsText: "m, as in moon",
       options: [
         { word: "moon",  emoji: "🌙", isCorrect: true  },
         { word: "duck",  emoji: "🦆", isCorrect: false },
@@ -115,7 +115,7 @@ export const MEMORY_LEVEL_1: MemoryLevel = {
     },
     {
       phoneme: "/h/",
-      ttsText: "huh",
+      ttsText: "h, as in hat",
       options: [
         { word: "hat",   emoji: "🎩", isCorrect: true  },
         { word: "dog",   emoji: "🐶", isCorrect: false },
@@ -150,7 +150,7 @@ export const MEMORY_LEVEL_2: MemoryLevel = {
   beginningSound: [
     {
       phoneme: "/bl/",
-      ttsText: "bluh",
+      ttsText: "bl, as in blue",
       options: [
         { word: "blue",   emoji: "🔵", isCorrect: true  },
         { word: "red",    emoji: "🔴", isCorrect: false },
@@ -159,7 +159,7 @@ export const MEMORY_LEVEL_2: MemoryLevel = {
     },
     {
       phoneme: "/dr/",
-      ttsText: "druh",
+      ttsText: "dr, as in dragon",
       options: [
         { word: "dragon", emoji: "🐉", isCorrect: true  },
         { word: "spring", emoji: "🌸", isCorrect: false },
@@ -168,7 +168,7 @@ export const MEMORY_LEVEL_2: MemoryLevel = {
     },
     {
       phoneme: "/sp/",
-      ttsText: "spuh",
+      ttsText: "sp, as in spark",
       options: [
         { word: "spark",  emoji: "✨", isCorrect: true  },
         { word: "night",  emoji: "🌙", isCorrect: false },
@@ -177,7 +177,7 @@ export const MEMORY_LEVEL_2: MemoryLevel = {
     },
     {
       phoneme: "/st/",
-      ttsText: "stuh",
+      ttsText: "st, as in stone",
       options: [
         { word: "stone",  emoji: "🪨", isCorrect: true  },
         { word: "drum",   emoji: "🥁", isCorrect: false },
@@ -186,7 +186,7 @@ export const MEMORY_LEVEL_2: MemoryLevel = {
     },
     {
       phoneme: "/pr/",
-      ttsText: "pruh",
+      ttsText: "pr, as in proud",
       options: [
         { word: "proud",  emoji: "🏆", isCorrect: true  },
         { word: "spring", emoji: "🌸", isCorrect: false },
@@ -217,7 +217,7 @@ export const MEMORY_LEVEL_3: MemoryLevel = {
   beginningSound: [
     {
       phoneme: "/str/",
-      ttsText: "struh",
+      ttsText: "str, as in stream",
       options: [
         { word: "stream",   emoji: "🌊", isCorrect: true  },
         { word: "thunder",  emoji: "⛈️", isCorrect: false },
@@ -226,7 +226,7 @@ export const MEMORY_LEVEL_3: MemoryLevel = {
     },
     {
       phoneme: "/thr/",
-      ttsText: "thruh",
+      ttsText: "thr, as in throne",
       options: [
         { word: "throne",   emoji: "👑", isCorrect: true  },
         { word: "gleam",    emoji: "✨", isCorrect: false },
@@ -235,7 +235,7 @@ export const MEMORY_LEVEL_3: MemoryLevel = {
     },
     {
       phoneme: "/shr/",
-      ttsText: "shruh",
+      ttsText: "shr, as in shriek",
       options: [
         { word: "shriek",   emoji: "😱", isCorrect: true  },
         { word: "shimmer",  emoji: "🌟", isCorrect: false },

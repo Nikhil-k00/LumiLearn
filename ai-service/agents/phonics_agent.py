@@ -1,6 +1,7 @@
 """
-Phonics Agent — analyzes letter confusion patterns (b/d, p/q, m/w, n/u)
-and returns updated phonics score + recommended focus.
+Phonics Agent — analyzes letter confusion patterns (b/d, p/q, m/w, n/u),
+session timing, and consecutive streak to return an accurate adaptive
+difficulty decision and structured signals for the recommendation agent.
 """
 import json
 from models.schemas import PhonicsAnalysisRequest, PhonicsAnalysisResult
@@ -13,6 +14,7 @@ CONFUSION_PAIRS = [
     ("m", "w"), ("w", "m"),
     ("n", "u"), ("u", "n"),
 ]
+
 
 def _extract_top_confusions(confusion_matrix: dict[str, int]) -> list[str]:
     """Return pairs like ['b/d', 'p/q'] sorted by frequency."""
@@ -30,41 +32,80 @@ def _compute_new_score(current: float, accuracy: float) -> float:
     return round(current * 0.7 + accuracy * 0.3, 1)
 
 
-def _compute_difficulty(current: int, accuracy: float) -> int:
-    """Increase difficulty above 80% accuracy, decrease below 50%."""
-    if accuracy >= 80 and current < 5:
-        return current + 1
-    if accuracy < 50 and current > 1:
-        return current - 1
-    return current
+def _compute_difficulty(
+    current: int,
+    accuracy: float,
+    top_confusions: list[str],
+    duration_seconds: int,
+    good_streak: int,
+) -> tuple[int, str]:
+    """
+    Returns (new_difficulty, direction).
+
+    Adaptive rules (ordered by priority):
+    1. Fatigue guard: session took >300 s AND accuracy < 70 → drop or hold.
+    2. Severe confusion: active b/d or p/q confusion with accuracy < 60 → drop.
+    3. Struggling: accuracy < 50 → drop immediately.
+    4. Good but confused: accuracy >= 80 but active hard confusions → hold.
+    5. Advancing: accuracy >= 80 for 2 consecutive good sessions → up.
+    6. Steady: accuracy 50–79 → hold.
+    """
+    hard_confusions = {"b/d", "p/q", "d/b", "q/p"}
+    has_hard_confusion = any(c in hard_confusions for c in top_confusions)
+
+    # Rule 1 — fatigue
+    if duration_seconds > 300 and accuracy < 70:
+        new = max(1, current - 1)
+        return new, "down" if new < current else "stable"
+
+    # Rule 2 — severe confusion at low accuracy
+    if has_hard_confusion and accuracy < 60:
+        new = max(1, current - 1)
+        return new, "down" if new < current else "stable"
+
+    # Rule 3 — struggling
+    if accuracy < 50:
+        new = max(1, current - 1)
+        return new, "down" if new < current else "stable"
+
+    # Rule 4 — good accuracy but still confused on hard pairs → hold
+    if accuracy >= 80 and has_hard_confusion:
+        return current, "stable"
+
+    # Rule 5 — advance after 2 consecutive good sessions (streak >= 1 means this is 2nd)
+    if accuracy >= 80 and good_streak >= 1 and current < 5:
+        return current + 1, "up"
+
+    # Rule 6 — steady
+    return current, "stable"
 
 
 async def analyze(req: PhonicsAnalysisRequest) -> PhonicsAnalysisResult:
     top_confusions = _extract_top_confusions(req.confusionMatrix)
-    focus_letters = []
+    focus_letters: list[str] = []
     for pair in top_confusions[:2]:
         focus_letters.extend(pair.split("/"))
+    focus_letters = list(dict.fromkeys(focus_letters))  # deduplicate, preserve order
 
-    # Accuracy: correct answers / total attempts
-    # total_mistakes = sum of confusion matrix values (every wrong tap)
-    # We use req.totalAttempts (correct + wrong) sent from the game session.
     total_mistakes = sum(req.confusionMatrix.values())
     total_items = max(req.totalAttempts, 1)
     accuracy = max(0.0, 100.0 - (total_mistakes / total_items) * 100)
 
     new_score = _compute_new_score(req.currentScore, accuracy)
-    new_difficulty = _compute_difficulty(req.difficulty, accuracy)
+    new_difficulty, direction = _compute_difficulty(
+        req.difficulty, accuracy, top_confusions,
+        req.durationSeconds, req.goodStreak
+    )
 
-    # GPT generates a friendly, personalized feedback message
     client = get_client()
+    confusion_text = ", ".join(top_confusions[:2]) if top_confusions else "none"
     prompt = (
         f"A child aged {req.studentAge} just played a phonics game. "
-        f"Their phonics score is {new_score}/100. "
-        f"They are confusing these letter pairs: {', '.join(top_confusions[:2]) if top_confusions else 'none'}. "
-        "Write ONE short, encouraging sentence (max 15 words) for the child. "
+        f"Accuracy: {accuracy:.0f}%. Letter confusions: {confusion_text}. "
+        f"Difficulty is moving {direction}. "
+        "Write ONE short, encouraging sentence (max 15 words). "
         "Never use negative language. Output only the sentence, no quotes."
     )
-    # gpt-4o-mini is sufficient for a single encouraging sentence — ~15x cheaper than gpt-4o
     resp = await client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
@@ -76,7 +117,8 @@ async def analyze(req: PhonicsAnalysisRequest) -> PhonicsAnalysisResult:
     return PhonicsAnalysisResult(
         newScore=new_score,
         topConfusions=top_confusions,
-        focusLetters=list(set(focus_letters)),
+        focusLetters=focus_letters,
         newDifficulty=new_difficulty,
+        difficultyDirection=direction,
         feedback=feedback,
     )

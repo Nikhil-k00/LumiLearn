@@ -62,6 +62,9 @@ export default function MemoryChallengePage() {
 
   const staticLevel = getMemoryLevel(difficulty);
   const activeLevel = dynamicLevel ?? staticLevel;
+  // Force mini-game remount when AI content arrives — their useState initializers
+  // only run once at mount, so changing the key is the only way to get new content.
+  const levelSource = dynamicLevel ? "ai" : "static";
   const xp = calculateXP(session.sequenceAccuracy, difficulty, session.attempts);
 
   // Called when a single mini-game finishes all its questions
@@ -195,7 +198,7 @@ export default function MemoryChallengePage() {
 
           {/* ── Active mini-game ─────────────────────────────────────────── */}
           {phase === "playing" && !peekLoading && currentGame === "sequence" && (
-            <motion.div key={`seq-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`seq-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <SoundSequence items={activeLevel.sequenceItems} minLength={activeLevel.minSequenceLength}
                 maxLength={activeLevel.maxSequenceLength} onResult={recordSequence}
                 onRoundComplete={handleMiniGameComplete} />
@@ -203,14 +206,14 @@ export default function MemoryChallengePage() {
           )}
 
           {phase === "playing" && !peekLoading && currentGame === "rhyme" && (
-            <motion.div key={`rhyme-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`rhyme-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <RhymeMatcher pairs={activeLevel.rhymePairs} onResult={recordRhyme}
                 onRoundComplete={handleMiniGameComplete} />
             </motion.div>
           )}
 
           {phase === "playing" && !peekLoading && currentGame === "beginning" && (
-            <motion.div key={`beg-${roundKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key={`beg-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <BeginningStart sounds={activeLevel.beginningSound} onResult={recordRhyme}
                 onRoundComplete={handleMiniGameComplete} />
             </motion.div>

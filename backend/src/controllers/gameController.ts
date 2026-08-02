@@ -276,8 +276,12 @@ export const submitGameSession = async (req: Request, res: Response): Promise<vo
       student.streak,
     ).catch(() => [] as BadgeDef[]);  // never let badge errors break the response
 
-    // 7. Call AI service for the encouragement message (GPT-4o-mini — fast, cheap).
+    // 7. Call AI service for the encouragement message and authoritative difficulty.
+    //    goodStreak is forwarded so the specialist agents can apply streak-based rules.
     //    Capped at 12 s so the response never hangs. Falls back to a static string.
+    const currentGoodStreak =
+      ((profile.goodSessionStreak as unknown as Record<string, number>) ?? {})[domain] ?? 0;
+
     const gameResultPayload = {
       score, accuracy, duration,
       attempts:            attempts ?? 1,
@@ -287,6 +291,8 @@ export const submitGameSession = async (req: Request, res: Response): Promise<vo
       rhymeScore:          rhymeScore ?? undefined,
       maxSequenceRecalled: maxSequenceRecalled ?? undefined,
       ttsUsageCount:       ttsUsageCount ?? undefined,
+      // Pass the streak so the AI specialist can apply streak-based difficulty rules
+      goodStreak:          currentGoodStreak,
     };
 
     let encouragementMessage = "Keep it up — you're doing great!";
@@ -318,6 +324,20 @@ export const submitGameSession = async (req: Request, res: Response): Promise<vo
         ]);
         if (aiResp.encouragementMessage) {
           encouragementMessage = aiResp.encouragementMessage;
+        }
+        // Apply the AI specialist's authoritative difficulty back to the profile.
+        // The specialist rule engine (not GPT) computed these values — they are
+        // precise and override the local heuristic that already ran above.
+        if (aiResp.difficultyAdjustments && domain) {
+          const aiDiff = aiResp.difficultyAdjustments as Record<string, number>;
+          if (typeof aiDiff[domain] === "number") {
+            const existingDiff = (updatedProfile.currentDifficulty as unknown as Record<string, number>);
+            const merged = { ...existingDiff, [domain]: Math.min(5, Math.max(1, aiDiff[domain])) };
+            await LearningProfile.findOneAndUpdate(
+              { studentId: resolvedStudentId },
+              { $set: { currentDifficulty: merged } }
+            );
+          }
         }
       }
     } catch {

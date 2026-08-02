@@ -22,11 +22,20 @@ export function SoundSequence({ items, minLength, maxLength, onResult, onRoundCo
   const [phase,        setPhase]     = useState<Phase>("watching");
   const [activeOrb,    setActiveOrb] = useState<string | null>(null);
   const [round,        setRound]     = useState(0);
+  // restartKey is incremented whenever we need a fresh game start —
+  // using a separate counter means we can always force a re-run even
+  // when round is already 0 (which setRound(0) cannot do).
+  const [restartKey,   setRestartKey] = useState(0);
   const consecutiveRef = useRef(0);
 
-  // Build + play a new sequence
-  const startRound = (length: number) => {
-    const activePool = items && items.length > 0 ? items : ALL_SEQUENCE_ITEMS.slice(0, 5);
+  // Always speak exactly the label shown on the orb.
+  const spokenText = (item: SoundSequenceItem) => item.label;
+
+  // Build + play a new sequence.
+  // IMPORTANT: takes the pool as a direct argument so it never reads a
+  // stale closure — the caller always passes the freshest items.
+  const startRound = (length: number, pool: SoundSequenceItem[]) => {
+    const activePool = pool && pool.length > 0 ? pool : ALL_SEQUENCE_ITEMS.slice(0, 5);
     const seq = Array.from({ length }, () => activePool[Math.floor(Math.random() * activePool.length)]);
     setSequence(seq);
     setInput([]);
@@ -36,20 +45,35 @@ export function SoundSequence({ items, minLength, maxLength, onResult, onRoundCo
     seq.forEach((item, i) => {
       setTimeout(() => {
         setActiveOrb(item.id);
-        // Speak the short label (e.g. "cat") not the full ttsText description.
-        // Long descriptions cause TTS lag and drown out the sequence timing.
-        speak(item.label, 0.9);
+        speak(spokenText(item), 0.8);
         setTimeout(() => setActiveOrb(null), 700);
       }, delay + i * 1100);
     });
     setTimeout(() => setPhase("input"), delay + seq.length * 1100 + 400);
   };
 
-  useEffect(() => { startRound(seqLength); }, [round]); // eslint-disable-line
+  // Fire a new round whenever round counter OR restartKey changes.
+  // items is included so the effect always has the latest pool in scope.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { startRound(seqLength, items); }, [round, restartKey, items]);
+
+  // When AI items arrive (identity change), restart the whole game cleanly.
+  const prevItemsRef = useRef(items);
+  useEffect(() => {
+    if (items !== prevItemsRef.current) {
+      prevItemsRef.current = items;
+      consecutiveRef.current = 0;
+      setSeqLength(minLength);
+      setRound(0);
+      // Always bump restartKey so the effect above re-fires even when
+      // round was already 0 (first play with static → AI transition).
+      setRestartKey((k) => k + 1);
+    }
+  }, [items, minLength]);
 
   const handleOrbTap = (item: SoundSequenceItem) => {
     if (phase !== "input") return;
-    speak(item.label, 0.9);
+    speak(spokenText(item), 0.8);
     setActiveOrb(item.id);
     setTimeout(() => setActiveOrb(null), 400);
 
@@ -80,7 +104,7 @@ export function SoundSequence({ items, minLength, maxLength, onResult, onRoundCo
         setSeqLength((l) => l + 1);
         consecutiveRef.current = 0;
       }
-      speak(`Amazing! ${seqLength} in a row!`);
+      speak(`Amazing! You remembered ${seqLength}!`);
       setTimeout(() => {
         if (round >= 5) { onRoundComplete(); return; }
         setRound((r) => r + 1);

@@ -3,12 +3,16 @@ import LearningProfile from "../models/LearningProfile";
 import Student from "../models/Student";
 import aiService from "./aiService";
 
-/** How many unconsumed items to keep ready per game type */
+/** Exact number of ready games to maintain per student per game type */
 export const POOL_TARGET    = 10;
-/** Refill when unconsumed count drops below this */
-export const LOW_WATER_MARK = 5;
-/** Max items to generate per refill call */
-const BATCH_SIZE = 10;
+/**
+ * Refill threshold: trigger a background top-up when the pool drops below
+ * this number AFTER a game is played.  Set to POOL_TARGET - 1 so a refill
+ * fires after every single play — this keeps the pool always full at 10.
+ */
+export const LOW_WATER_MARK = POOL_TARGET - 1;
+/** Max items to generate per refill call — never exceed POOL_TARGET */
+const BATCH_SIZE = POOL_TARGET;
 /** Max parallel AI calls per refill — keeps the AI service from being hammered */
 const MAX_CONCURRENT = 3;
 
@@ -22,32 +26,32 @@ const refillLocks = new Set<string>();
 const GAME_TYPES = ["phonics_adventure", "word_quest", "memory_challenge"] as const;
 type GameType = typeof GAME_TYPES[number];
 
-// ─── Count unconsumed items ────────────────────────────────────────────────────
+// ─── Count ready (unplayed) items ─────────────────────────────────────────────
+// Items are DELETED when played, so the array length equals the ready count.
 
 export async function unconsumedCount(studentId: string, gameType: GameType): Promise<number> {
   const pool = await GamePool.findOne({ studentId, gameType }).select("items").lean();
   if (!pool) return 0;
-  return pool.items.filter((i) => !i.consumed).length;
+  return pool.items.length;
 }
 
-// ─── Peek the next unconsumed item WITHOUT consuming it ──────────────────────
-// Used on first page load so the student sees fresh AI content immediately
-// without wasting a pool slot. The item is only consumed when the student
-// actually completes a session and clicks "Play Again".
+// ─── Peek the first ready item WITHOUT removing it ───────────────────────────
+// Used on first page load — returns fresh AI content without consuming the slot.
+// The item is only removed when the student actually completes a session.
 
 export async function peekNextGame(
   studentId: string,
   gameType: GameType
 ): Promise<{ content: Record<string, unknown>; title: string; difficulty: number } | null> {
   const pool = await GamePool.findOne({ studentId, gameType }).lean();
-  if (!pool) return null;
-  const item = pool.items.find((i) => !i.consumed);
-  if (!item) return null;
+  if (!pool || pool.items.length === 0) return null;
+  const item = pool.items[0];
   return { content: item.content, title: item.title, difficulty: item.difficulty };
 }
 
-// ─── Pop the next unconsumed item from the pool ───────────────────────────────
-// Only call this when the student has completed a session and wants a new game.
+// ─── Pop the first ready item — DELETES it from the array ────────────────────
+// Called when a student completes a session and clicks "Play Again".
+// Removing the item keeps the array length equal to the number of unplayed games.
 
 export async function popNextGame(
   studentId: string,
@@ -63,36 +67,24 @@ export async function popNextGame(
     return null;
   }
 
-  const idx = pool.items.findIndex((i) => !i.consumed);
-
-  // All items consumed — trigger a refill and return null
-  if (idx === -1) {
+  if (pool.items.length === 0) {
+    // Pool empty — trigger a refill and return null
     refillPool(studentId, gameType).catch((err) =>
       console.error(`[GamePool] Refill-on-empty failed for ${gameType}:`, err)
     );
     return null;
   }
 
-  // Capture the item content BEFORE mutating the array
-  const item = pool.items[idx];
+  // Take the first item and atomically remove it from the array in one operation.
+  // Using findOneAndUpdate + $pop keeps this atomic — no separate save() needed.
+  const item = pool.items[0];
+  await GamePool.findOneAndUpdate(
+    { studentId, gameType },
+    { $pop: { items: -1 } }   // -1 removes from the front (FIFO)
+  );
 
-  // Mark consumed
-  pool.items[idx].consumed   = true;
-  pool.items[idx].consumedAt = new Date();
-
-  // Prune old consumed items when the array grows large — keeps MongoDB document small.
-  // Strategy: keep all unconsumed + only the 20 most recently consumed (for audit).
-  const afterMark = pool.items.filter((i) => i.consumed);
-  if (afterMark.length > 20) {
-    const unconsumed     = pool.items.filter((i) => !i.consumed);
-    const recentConsumed = afterMark.slice(-20); // last 20
-    pool.items = [...recentConsumed, ...unconsumed] as typeof pool.items;
-  }
-
-  await pool.save();
-
-  // Trigger background refill if running low
-  const remaining = pool.items.filter((i) => !i.consumed).length;
+  // Array now has one fewer item — trigger a top-up to keep pool at POOL_TARGET
+  const remaining = pool.items.length - 1;
   if (remaining < LOW_WATER_MARK) {
     refillPool(studentId, gameType).catch((err) =>
       console.error(`[GamePool] Background refill failed for ${gameType}:`, err)
@@ -208,13 +200,16 @@ async function doRefill(
 
     if (newItems.length === 0) return;
 
+    // Atomically append new items and cap the array at POOL_TARGET.
+    // $slice: -POOL_TARGET keeps the LAST N elements (newest), discarding any
+    // surplus that could accumulate from concurrent refill calls racing each other.
     await GamePool.findOneAndUpdate(
       { studentId, gameType },
-      { $push: { items: { $each: newItems } } },
+      { $push: { items: { $each: newItems, $slice: -POOL_TARGET } } },
       { upsert: true, new: true }
     );
 
-    console.log(`[GamePool] Pool for ${gameType} now has ${await unconsumedCount(studentId, gameType)} unconsumed items`);
+    console.log(`[GamePool] Pool for ${gameType} now has ${await unconsumedCount(studentId, gameType)} ready items`);
   } finally {
     refillLocks.delete(lockKey);
   }

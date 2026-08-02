@@ -18,6 +18,33 @@ class MistakeEntry(BaseModel):
     correct:       str
 
 
+# ─── Rich session performance context passed from backend ─────────────────────
+# Carries everything the specialist agents computed so the recommendation agent
+# can generate genuinely adaptive, personalised content for the NEXT game.
+
+class PerformanceContext(BaseModel):
+    # Direction the difficulty is moving this session: "up" | "down" | "stable"
+    difficultyDirection: str = "stable"
+    # Computed difficulty for THIS domain after this session
+    newDifficulty: int = 1
+    # Session duration in seconds — detect fatigue (long slow sessions)
+    durationSeconds: int = 0
+    # Phonics-specific: letter pairs the student confused most, e.g. ["b/d","p/q"]
+    topConfusions: list[str] = []
+    # Phonics-specific: individual letters to focus on next session
+    focusLetters: list[str] = []
+    # Word-quest-specific: how many times child tapped TTS (audio help)
+    ttsUsageCount: int = 0
+    # Memory-specific: longest sequence recalled correctly
+    maxSequenceRecalled: int = 0
+    # Memory-specific: 0–100 rhyme matching accuracy
+    rhymeScore: Optional[float] = None
+    # Memory-specific: 0–100 sequence recall accuracy
+    sequenceAccuracy: Optional[float] = None
+    # How many consecutive good sessions the student has had in this domain
+    goodStreak: int = 0
+
+
 # ─── Learner state (sent from backend to AI service) ─────────────────────────
 
 class LearnerState(BaseModel):
@@ -34,6 +61,8 @@ class LearnerState(BaseModel):
     weakAreas:          list[str] = []
     strongAreas:        list[str] = []
     currentDifficulty:  DifficultyMap = Field(default_factory=DifficultyMap)
+    # Rich context from the just-completed session — drives content adaptation
+    sessionContext:     Optional[PerformanceContext] = None
 
 
 # ─── Game result (sent alongside learner state) ───────────────────────────────
@@ -52,6 +81,8 @@ class GameResult(BaseModel):
     maxSequenceRecalled: Optional[int] = None
     sequenceAccuracy:    Optional[float] = None
     rhymeScore:          Optional[float] = None   # 0–100 from RhymeMatcher game
+    # streak context (passed from backend profile)
+    goodStreak:          int = 0
 
 
 # ─── Orchestrator I/O ─────────────────────────────────────────────────────────
@@ -88,14 +119,17 @@ class PhonicsAnalysisRequest(BaseModel):
     currentScore:    float
     difficulty:      int
     studentAge:      int
-    totalAttempts:   int = 1   # total answered items in the session (correct + wrong)
+    totalAttempts:   int = 1
+    durationSeconds: int = 0
+    goodStreak:      int = 0
 
 class PhonicsAnalysisResult(BaseModel):
-    newScore:        float
-    topConfusions:   list[str]        # e.g. ["b/d", "p/q"]
-    focusLetters:    list[str]
-    newDifficulty:   int
-    feedback:        str
+    newScore:            float
+    topConfusions:       list[str]        # e.g. ["b/d", "p/q"]
+    focusLetters:        list[str]
+    newDifficulty:       int
+    difficultyDirection: str              # "up" | "down" | "stable"
+    feedback:            str
 
 
 class MemoryAnalysisRequest(BaseModel):
@@ -104,22 +138,26 @@ class MemoryAnalysisRequest(BaseModel):
     rhymeScore:          Optional[float] = None
     currentScore:        float
     difficulty:          int
+    durationSeconds:     int = 0
+    goodStreak:          int = 0
 
 class MemoryAnalysisResult(BaseModel):
-    newScore:      float
-    newDifficulty: int
-    feedback:      str
+    newScore:            float
+    newDifficulty:       int
+    difficultyDirection: str
+    feedback:            str
 
 
 class ReadingAnalysisRequest(BaseModel):
-    accuracy:      float
-    ttsUsageCount: Optional[int]
-    currentScore:  float
-    difficulty:    int
+    accuracy:        float
+    ttsUsageCount:   Optional[int]
+    currentScore:    float
+    difficulty:      int
+    durationSeconds: int = 0
+    goodStreak:      int = 0
 
 class ReadingAnalysisResult(BaseModel):
-    newScore:      float
-    newDifficulty: int
-    feedback:      str
-
-
+    newScore:            float
+    newDifficulty:       int
+    difficultyDirection: str
+    feedback:            str
