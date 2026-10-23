@@ -1,26 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTTS } from "@/hooks/useTTS";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { Volume2, Flame, LogOut, Zap } from "lucide-react";
-import api from "@/lib/api";
 import Link from "next/link";
 import { getLevelFromXP, getXPForNextLevel } from "@/lib/gamification";
-
-interface DashboardData {
-  student: {
-    name: string; age: number; avatarId: string;
-    xp: number; coins: number; level: number; streak: number;
-  };
-  profile: {
-    phonicsScore: number; readingScore: number; memoryScore: number;
-    weakAreas: string[];
-  } | null;
-  recentAchievements: { name: string; emoji: string }[];
-}
 
 const GAMES = [
   {

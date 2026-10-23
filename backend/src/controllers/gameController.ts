@@ -38,11 +38,11 @@ const BADGE_MAP = Object.fromEntries(BADGES.map((b) => [b.badgeId, b]));
 
 /**
  * Check which badges the student has just unlocked and create them.
- * Uses findOneAndUpdate with upsert=false + create only if not exists —
- * each badge fires at most once per student lifetime.
+ * Checks existing records first, then inserts badges individually so a
+ * duplicate-key race for one badge cannot block other eligible badges.
  * Returns the list of newly awarded badges (so the response can show them).
  */
-async function awardAchievements(
+export async function awardAchievements(
   studentId:    string,
   gameType:     string,
   accuracy:     number,
@@ -94,7 +94,7 @@ async function awardAchievements(
   const newBadges = earned.filter((id) => !alreadyHas.has(id));
   if (newBadges.length === 0) return [];
 
-  // Create all new badges in one shot
+  // Build the documents to award
   const docs = newBadges.map((id) => ({
     studentId,
     badgeId:     id,
@@ -104,7 +104,19 @@ async function awardAchievements(
     earnedAt:    new Date(),
   }));
 
-  await Achievement.insertMany(docs);
+  for (const doc of docs) {
+    try {
+      await Achievement.create(doc);
+    } catch (err) {
+      // A duplicate-key race can still occur if two requests award the same badge at once.
+      // Do not delete or mutate existing records; continue with the other eligible badges.
+      const code = (err as { code?: number })?.code;
+      if (code !== 11000) {
+        throw err;
+      }
+    }
+  }
+
   return newBadges.map((id) => BADGE_MAP[id]);
 }
 

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Volume2 } from "lucide-react";
 import { useTTS } from "@/hooks/useTTS";
 import { LetterCard } from "./LetterCard";
@@ -23,7 +23,7 @@ function buildOptions(correct: PhonicsWord, pool: PhonicsWord[]): PhonicsWord[] 
 
 export function SoundMatchGame({ words, onAnswer, onRoundComplete }: SoundMatchGameProps) {
   const { speak } = useTTS();
-  const [queue,     setQueue]     = useState<PhonicsWord[]>(() => shuffle(words).slice(0, 8));
+  const [queue]     = useState<PhonicsWord[]>(() => shuffle(words).slice(0, 8));
   const [index,     setIndex]     = useState(0);
   const [options,   setOptions]   = useState<PhonicsWord[]>([]);
   const [feedback,  setFeedback]  = useState<"idle" | "correct" | "wrong">("idle");

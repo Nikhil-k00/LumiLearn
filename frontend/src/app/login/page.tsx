@@ -1,13 +1,11 @@
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Volume2 } from "lucide-react";
 import { useTTS } from "@/hooks/useTTS";
 import Link from "next/link";
-
-type Role = "student" | "parent";
 
 /* Floating decorative orbs for the hero side */
 const ORBS = [
@@ -27,7 +25,6 @@ export default function LoginPage() {
   const router     = useRouter();
   const [name,     setName]     = useState("");
   const [parentEmail, setParentEmail] = useState("");
-  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);

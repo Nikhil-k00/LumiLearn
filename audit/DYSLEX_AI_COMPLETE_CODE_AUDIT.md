@@ -1,4 +1,4 @@
-# DysLex AI — Complete Code Audit
+﻿# DysLex AI â€” Complete Code Audit
 
 ## 1. Executive summary
 
@@ -32,11 +32,11 @@ Detected stack:
 
 ### Verified service map
 
-- `frontend/` — UI for login, register, dashboard, and games
-- `backend/` — authenticated API, MongoDB persistence, scoring, badges, rewards, and AI orchestration calls
-- `ai-service/` — orchestrator and domain-specific agents for phonics, reading, memory, and recommendation generation
-- `shared/` — cross-service type definitions
-- `docs/` — architecture documentation
+- `frontend/` â€” UI for login, register, dashboard, and games
+- `backend/` â€” authenticated API, MongoDB persistence, scoring, badges, rewards, and AI orchestration calls
+- `ai-service/` â€” orchestrator and domain-specific agents for phonics, reading, memory, and recommendation generation
+- `shared/` â€” cross-service type definitions
+- `docs/` â€” architecture documentation
 
 ---
 
@@ -44,101 +44,101 @@ Detected stack:
 
 ```text
 DysLex AI/
-├── README.md
-├── package.json
-├── render.yaml
-├── docs/
-│   ├── ARCHITECTURE.md
-│   └── README.md
-├── shared/
-│   └── types/index.ts
-├── frontend/
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── next.config.js
-│   ├── tailwind.config.ts
-│   └── src/
-│       ├── app/
-│       │   ├── dashboard/student/page.tsx
-│       │   ├── dashboard/student/parent-zone/page.tsx
-│       │   ├── games/memory-challenge/page.tsx
-│       │   ├── games/phonics-adventure/page.tsx
-│       │   ├── games/word-quest/page.tsx
-│       │   ├── login/page.tsx
-│       │   ├── page.tsx
-│       │   ├── register/student/page.tsx
-│       │   └── layout.tsx
-│       ├── components/
-│       │   └── games/
-│       ├── contexts/
-│       │   ├── AccessibilityContext.tsx
-│       │   └── AuthContext.tsx
-│       ├── data/
-│       ├── hooks/
-│       │   ├── useDashboardData.ts
-│       │   ├── useMemorySession.ts
-│       │   ├── usePhonicsSession.ts
-│       │   ├── usePoolGame.ts
-│       │   ├── useTTS.ts
-│       │   └── useWordQuestSession.ts
-│       ├── lib/
-│       │   └── api.ts
-│       └── ...
-├── backend/
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── tsconfig.json
-│   └── src/
-│       ├── app.ts
-│       ├── server.ts
-│       ├── config/db.ts
-│       ├── controllers/
-│       │   ├── analyticsController.ts
-│       │   ├── authController.ts
-│       │   ├── gameController.ts
-│       │   └── studentController.ts
-│       ├── middleware/auth.ts
-│       ├── models/
-│       │   ├── Achievement.ts
-│       │   ├── AnalyticsEntry.ts
-│       │   ├── GamePool.ts
-│       │   ├── GameSession.ts
-│       │   ├── LearningProfile.ts
-│       │   └── Student.ts
-│       ├── routes/
-│       │   ├── analyticsRoutes.ts
-│       │   ├── authRoutes.ts
-│       │   ├── gameRoutes.ts
-│       │   └── studentRoutes.ts
-│       ├── services/
-│       │   ├── aiService.ts
-│       │   └── gamePoolService.ts
-│       ├── utils/
-│       │   ├── gamification.ts
-│       │   └── jwt.ts
-│       └── ...
-├── ai-service/
-│   ├── requirements.txt
-│   ├── main.py
-│   ├── agents/
-│   │   ├── analytics_agent.py
-│   │   ├── memory_agent.py
-│   │   ├── orchestrator.py
-│   │   ├── phonics_agent.py
-│   │   ├── reading_agent.py
-│   │   └── recommendation_agent.py
-│   ├── api/
-│   │   ├── __init__.py
-│   │   └── routes.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── schemas.py
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   └── openai_client.py
-│   └── ...
-└── audit/
-    └── DYSLEX_AI_COMPLETE_CODE_AUDIT.md
+â”œâ”€â”€ README.md
+â”œâ”€â”€ package.json
+â”œâ”€â”€ render.yaml
+â”œâ”€â”€ docs/
+â”‚   â”œâ”€â”€ ARCHITECTURE.md
+â”‚   â””â”€â”€ README.md
+â”œâ”€â”€ shared/
+â”‚   â””â”€â”€ types/index.ts
+â”œâ”€â”€ frontend/
+â”‚   â”œâ”€â”€ package.json
+â”‚   â”œâ”€â”€ package-lock.json
+â”‚   â”œâ”€â”€ next.config.js
+â”‚   â”œâ”€â”€ tailwind.config.ts
+â”‚   â””â”€â”€ src/
+â”‚       â”œâ”€â”€ app/
+â”‚       â”‚   â”œâ”€â”€ dashboard/student/page.tsx
+â”‚       â”‚   â”œâ”€â”€ dashboard/student/parent-zone/page.tsx
+â”‚       â”‚   â”œâ”€â”€ games/memory-challenge/page.tsx
+â”‚       â”‚   â”œâ”€â”€ games/phonics-adventure/page.tsx
+â”‚       â”‚   â”œâ”€â”€ games/word-quest/page.tsx
+â”‚       â”‚   â”œâ”€â”€ login/page.tsx
+â”‚       â”‚   â”œâ”€â”€ page.tsx
+â”‚       â”‚   â”œâ”€â”€ register/student/page.tsx
+â”‚       â”‚   â””â”€â”€ layout.tsx
+â”‚       â”œâ”€â”€ components/
+â”‚       â”‚   â””â”€â”€ games/
+â”‚       â”œâ”€â”€ contexts/
+â”‚       â”‚   â”œâ”€â”€ AccessibilityContext.tsx
+â”‚       â”‚   â””â”€â”€ AuthContext.tsx
+â”‚       â”œâ”€â”€ data/
+â”‚       â”œâ”€â”€ hooks/
+â”‚       â”‚   â”œâ”€â”€ useDashboardData.ts
+â”‚       â”‚   â”œâ”€â”€ useMemorySession.ts
+â”‚       â”‚   â”œâ”€â”€ usePhonicsSession.ts
+â”‚       â”‚   â”œâ”€â”€ usePoolGame.ts
+â”‚       â”‚   â”œâ”€â”€ useTTS.ts
+â”‚       â”‚   â””â”€â”€ useWordQuestSession.ts
+â”‚       â”œâ”€â”€ lib/
+â”‚       â”‚   â””â”€â”€ api.ts
+â”‚       â””â”€â”€ ...
+â”œâ”€â”€ backend/
+â”‚   â”œâ”€â”€ package.json
+â”‚   â”œâ”€â”€ package-lock.json
+â”‚   â”œâ”€â”€ tsconfig.json
+â”‚   â””â”€â”€ src/
+â”‚       â”œâ”€â”€ app.ts
+â”‚       â”œâ”€â”€ server.ts
+â”‚       â”œâ”€â”€ config/db.ts
+â”‚       â”œâ”€â”€ controllers/
+â”‚       â”‚   â”œâ”€â”€ analyticsController.ts
+â”‚       â”‚   â”œâ”€â”€ authController.ts
+â”‚       â”‚   â”œâ”€â”€ gameController.ts
+â”‚       â”‚   â””â”€â”€ studentController.ts
+â”‚       â”œâ”€â”€ middleware/auth.ts
+â”‚       â”œâ”€â”€ models/
+â”‚       â”‚   â”œâ”€â”€ Achievement.ts
+â”‚       â”‚   â”œâ”€â”€ AnalyticsEntry.ts
+â”‚       â”‚   â”œâ”€â”€ GamePool.ts
+â”‚       â”‚   â”œâ”€â”€ GameSession.ts
+â”‚       â”‚   â”œâ”€â”€ LearningProfile.ts
+â”‚       â”‚   â””â”€â”€ Student.ts
+â”‚       â”œâ”€â”€ routes/
+â”‚       â”‚   â”œâ”€â”€ analyticsRoutes.ts
+â”‚       â”‚   â”œâ”€â”€ authRoutes.ts
+â”‚       â”‚   â”œâ”€â”€ gameRoutes.ts
+â”‚       â”‚   â””â”€â”€ studentRoutes.ts
+â”‚       â”œâ”€â”€ services/
+â”‚       â”‚   â”œâ”€â”€ aiService.ts
+â”‚       â”‚   â””â”€â”€ gamePoolService.ts
+â”‚       â”œâ”€â”€ utils/
+â”‚       â”‚   â”œâ”€â”€ gamification.ts
+â”‚       â”‚   â””â”€â”€ jwt.ts
+â”‚       â””â”€â”€ ...
+â”œâ”€â”€ ai-service/
+â”‚   â”œâ”€â”€ requirements.txt
+â”‚   â”œâ”€â”€ main.py
+â”‚   â”œâ”€â”€ agents/
+â”‚   â”‚   â”œâ”€â”€ analytics_agent.py
+â”‚   â”‚   â”œâ”€â”€ memory_agent.py
+â”‚   â”‚   â”œâ”€â”€ orchestrator.py
+â”‚   â”‚   â”œâ”€â”€ phonics_agent.py
+â”‚   â”‚   â”œâ”€â”€ reading_agent.py
+â”‚   â”‚   â””â”€â”€ recommendation_agent.py
+â”‚   â”œâ”€â”€ api/
+â”‚   â”‚   â”œâ”€â”€ __init__.py
+â”‚   â”‚   â””â”€â”€ routes.py
+â”‚   â”œâ”€â”€ models/
+â”‚   â”‚   â”œâ”€â”€ __init__.py
+â”‚   â”‚   â””â”€â”€ schemas.py
+â”‚   â”œâ”€â”€ utils/
+â”‚   â”‚   â”œâ”€â”€ __init__.py
+â”‚   â”‚   â””â”€â”€ openai_client.py
+â”‚   â””â”€â”€ ...
+â””â”€â”€ audit/
+    â””â”€â”€ DYSLEX_AI_COMPLETE_CODE_AUDIT.md
 ```
 
 ---
@@ -163,7 +163,7 @@ I did not delete, rename, or rewrite application logic. This report is limited t
 
 - Severity: Medium
 - File: `backend/src/models/Achievement.ts`
-- Related logic: `backend/src/controllers/gameController.ts` → `awardAchievements()`
+- Related logic: `backend/src/controllers/gameController.ts` â†’ `awardAchievements()`
 - Evidence:
   - `awardAchievements()` does a read of existing badges and then `Achievement.insertMany(docs)`.
   - `AchievementSchema` has no unique compound index on `(studentId, badgeId)`.
@@ -251,7 +251,7 @@ The codebase is intentionally modular and the architecture uses multiple service
 - `docs/` has architecture notes, which are not runtime dependencies.
 - `chart.js` and `react-chartjs-2` are present in `frontend/package.json`, but I did not find an active chart dashboard in the reviewed frontend screens, so they may be reserved for future analytics views rather than dead code.
 
-This is a “possible future use” finding, not a confirmed bug.
+This is a â€œpossible future useâ€ finding, not a confirmed bug.
 
 ---
 
@@ -269,7 +269,7 @@ This is a “possible future use” finding, not a confirmed bug.
 - `chart.js` / `react-chartjs-2` may be intended for analytics dashboards, but there was no direct evidence of active chart rendering in the inspected screens.
 - `CLOUDINARY_*` variables appear in the backend `.env.example`, but I did not find an implemented upload flow in the reviewed code path.
 
-These are not confirmed unused dependencies, just a possible future cleanup item if the app’s analytics requirements evolve.
+These are not confirmed unused dependencies, just a possible future cleanup item if the appâ€™s analytics requirements evolve.
 
 ---
 
@@ -283,7 +283,7 @@ These are not confirmed unused dependencies, just a possible future cleanup item
 
 ### Documentation mismatch
 
-- `README.md` says the frontend stack is “Next.js 14”, while the actual version is `next ^16.2.10`.
+- `README.md` says the frontend stack is â€œNext.js 14â€, while the actual version is `next ^16.2.10`.
 - The architecture documentation also describes the frontend as Next.js 14.
 
 ### Build warnings that should be fixed
@@ -407,7 +407,7 @@ The codebase demonstrates an awareness of security basics but would benefit from
 
 ### Missing validation
 
-- No automated tests were found for the app’s critical flows.
+- No automated tests were found for the appâ€™s critical flows.
 - No test runner or CI workflow was evident in the repository structure.
 
 ### Overall conclusion
@@ -471,13 +471,25 @@ Overall verdict: Suitable for continued development and internal demonstration; 
 
 Build and compile evidence reviewed:
 
-- `frontend/package.json` — Next.js 16.2.10
-- `backend/package.json` — Express + TypeScript + Mongoose
-- `ai-service/requirements.txt` — FastAPI + OpenAI + Python dependencies
-- `backend/src/models/Achievement.ts` — missing unique badge index
-- `frontend/src/app/layout.tsx` — metadata compatibility warning
-- `backend/src/controllers/gameController.ts` — badge-award logic
-- `backend/src/services/gamePoolService.ts` — AI pool refill logic
-- `ai-service/agents/orchestrator.py` — adaptive orchestration logic
+- `frontend/package.json` â€” Next.js 16.2.10
+- `backend/package.json` â€” Express + TypeScript + Mongoose
+- `ai-service/requirements.txt` â€” FastAPI + OpenAI + Python dependencies
+- `backend/src/models/Achievement.ts` â€” missing unique badge index
+- `frontend/src/app/layout.tsx` â€” metadata compatibility warning
+- `backend/src/controllers/gameController.ts` â€” badge-award logic
+- `backend/src/services/gamePoolService.ts` â€” AI pool refill logic
+- `ai-service/agents/orchestrator.py` â€” adaptive orchestration logic
 
-This audit was performed with a code-review and compile verification approach only; it is intentionally conservative and avoids asserting “unused” or “fixed” status without direct evidence.
+This audit was performed with a code-review and compile verification approach only; it is intentionally conservative and avoids asserting â€œunusedâ€ or â€œfixedâ€ status without direct evidence.
+
+---
+
+## 17. Remediation status
+
+This audit was updated after the first approved remediation phase.
+
+- Enforced unique badge constraint via a compound unique index on `(studentId, badgeId)` in `backend/src/models/Achievement.ts` and added a safe duplicate-key guard in `backend/src/controllers/gameController.ts`.
+- Added focused backend regression tests in `backend/tests/remediation.test.js` and a `backend` npm test command.
+- Fixed the Next.js metadata warning in `frontend/src/app/layout.tsx` by splitting `viewport` into a dedicated export.
+- Updated documentation and environment examples in `README.md`, `docs/ARCHITECTURE.md`, `backend/.env.example`, and `ai-service/.env.example` to match the actual architecture.
+- Actual validation results: backend test suite passes (5/5), frontend build passes, and the duplicate check for achievement records returned zero duplicate groups before the index was enforced.

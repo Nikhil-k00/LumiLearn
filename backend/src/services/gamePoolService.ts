@@ -15,6 +15,8 @@ export const LOW_WATER_MARK = POOL_TARGET - 1;
 const BATCH_SIZE = POOL_TARGET;
 /** Max parallel AI calls per refill — keeps the AI service from being hammered */
 const MAX_CONCURRENT = 3;
+/** Maximum additional generation rounds when AI output is invalid or incomplete */
+export const MAX_REFILL_RETRIES = 2;
 
 /**
  * In-memory lock: tracks which "studentId:gameType" refills are currently running.
@@ -25,6 +27,54 @@ const refillLocks = new Set<string>();
 
 const GAME_TYPES = ["phonics_adventure", "word_quest", "memory_challenge"] as const;
 type GameType = typeof GAME_TYPES[number];
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function canonicalizeForDuplicateCheck(value: unknown): string {
+  if (typeof value === "string") return value.trim().replace(/\s+/g, " ");
+  if (typeof value === "number" || typeof value === "boolean") return JSON.stringify(value);
+  if (value === null || value === undefined) return "null";
+  if (Array.isArray(value)) return JSON.stringify(value.map(canonicalizeForDuplicateCheck));
+  if (isPlainObject(value)) {
+    return JSON.stringify(
+      Object.fromEntries(
+        Object.entries(value)
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([key, entry]) => [key, canonicalizeForDuplicateCheck(entry)])
+      )
+    );
+  }
+  return JSON.stringify(String(value));
+}
+
+function normalizeTitle(title: string): string {
+  return title.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+}
+
+export function validateGeneratedActivity(
+  activity: unknown,
+  gameType: GameType,
+  seenTitles = new Set<string>(),
+  seenContent = new Set<string>()
+): activity is { gameType: GameType; title: string; difficulty: number; content: Record<string, unknown> } {
+  if (!isPlainObject(activity)) return false;
+
+  const { gameType: generatedGameType, title, difficulty, content } = activity as Record<string, unknown>;
+  if (generatedGameType !== gameType || typeof generatedGameType !== "string") return false;
+  if (typeof title !== "string" || title.trim().length === 0) return false;
+  if (!Number.isInteger(difficulty) || typeof difficulty !== "number" || difficulty < 1 || difficulty > 5) return false;
+  if (!isPlainObject(content) || Object.keys(content).length === 0) return false;
+
+  const normalizedTitle = normalizeTitle(title);
+  const normalizedContent = canonicalizeForDuplicateCheck(content);
+  if (seenTitles.has(normalizedTitle) || seenContent.has(normalizedContent)) return false;
+
+  seenTitles.add(normalizedTitle);
+  seenContent.add(normalizedContent);
+  return true;
+}
 
 // ─── Count ready (unplayed) items ─────────────────────────────────────────────
 // Items are DELETED when played, so the array length equals the ready count.
@@ -130,7 +180,9 @@ async function doRefill(
 
   try {
     // Check how many are already unconsumed — don't overfill
-    const current = await unconsumedCount(studentId, gameType);
+    const existingPool = await GamePool.findOne({ studentId, gameType }).select("items").lean();
+    const existingItems = existingPool?.items ?? [];
+    const current = existingItems.length;
     const needed  = POOL_TARGET - current;
     if (needed <= 0) {
       console.log(`[GamePool] Pool full for ${gameType} (${current} items) — skipping refill`);
@@ -165,47 +217,67 @@ async function doRefill(
     };
 
     const newItems: Array<{ content: Record<string, unknown>; difficulty: number; title: string; generatedAt: Date; consumed: boolean }> = [];
+    const seenTitles = new Set<string>();
+    const seenContentHashes = new Set<string>();
 
-    // Fire AI calls in small concurrent batches
-    const results: PromiseSettledResult<Awaited<ReturnType<typeof aiService.orchestrate>>>[] = [];
-    for (let i = 0; i < toGenerate; i += MAX_CONCURRENT) {
-      const batch = Array.from({ length: Math.min(MAX_CONCURRENT, toGenerate - i) }, () =>
-        aiService.orchestrate({
-          learnerState,
-          // Use the provided game result — real data from session, or neutral defaults for seeding
-          gameResult: { gameType, ...gameResult },
-        })
-      );
-      const batchResults = await Promise.allSettled(batch);
-      results.push(...batchResults);
-    }
-
-    for (const result of results) {
-      if (result.status === "rejected") {
-        console.error(`[GamePool] AI call failed for ${gameType}:`, result.reason instanceof Error ? result.reason.message : result.reason);
-        continue;
-      }
-      const activity = result.value.activities?.find((a) => a.gameType === gameType);
-      if (activity?.content) {
-        newItems.push({
-          content:     activity.content as Record<string, unknown>,
-          difficulty:  activity.difficulty,
-          title:       activity.title,
-          generatedAt: new Date(),
-          consumed:    false,
-        });
-        console.log(`[GamePool] Generated item ${newItems.length} for ${gameType}`);
+    for (const item of existingItems) {
+      if (typeof item.title === "string" && isPlainObject(item.content)) {
+        seenTitles.add(normalizeTitle(item.title));
+        seenContentHashes.add(canonicalizeForDuplicateCheck(item.content));
       }
     }
 
+    for (let retry = 0; retry <= MAX_REFILL_RETRIES && newItems.length < needed; retry += 1) {
+      const remaining = Math.min(needed - newItems.length, BATCH_SIZE);
+      const results: PromiseSettledResult<Awaited<ReturnType<typeof aiService.orchestrate>>>[] = [];
+
+      for (let i = 0; i < remaining; i += MAX_CONCURRENT) {
+        const batch = Array.from({ length: Math.min(MAX_CONCURRENT, remaining - i) }, () =>
+          aiService.orchestrate({
+            learnerState,
+            // Use the provided game result — real data from session, or neutral defaults for seeding
+            gameResult: { gameType, ...gameResult },
+          })
+        );
+        results.push(...await Promise.allSettled(batch));
+      }
+
+      for (const result of results) {
+        if (newItems.length >= needed) break;
+        if (result.status === "rejected") {
+          console.error(`[GamePool] AI call failed for ${gameType}:`, result.reason instanceof Error ? result.reason.message : result.reason);
+          continue;
+        }
+
+        const activities = Array.isArray(result.value?.activities) ? result.value.activities : [];
+        for (const activity of activities) {
+          if (!validateGeneratedActivity(activity, gameType, seenTitles, seenContentHashes)) {
+            console.warn(`[GamePool] Skipping malformed or duplicate AI activity for ${gameType}`);
+            continue;
+          }
+
+          newItems.push({
+            content:     activity.content,
+            difficulty:  activity.difficulty,
+            title:       activity.title,
+            generatedAt: new Date(),
+            consumed:    false,
+          });
+          console.log(`[GamePool] Generated item ${newItems.length} for ${gameType}`);
+          if (newItems.length >= needed) break;
+        }
+      }
+    }
+
+    if (newItems.length < needed) {
+      console.warn(`[GamePool] Refill incomplete for ${gameType}: generated ${newItems.length} of ${needed} requested items after ${MAX_REFILL_RETRIES} retries`);
+    }
     if (newItems.length === 0) return;
 
-    // Atomically append new items and cap the array at POOL_TARGET.
-    // $slice: -POOL_TARGET keeps the LAST N elements (newest), discarding any
-    // surplus that could accumulate from concurrent refill calls racing each other.
+    // Append only the missing capacity so existing valid pool items are retained.
     await GamePool.findOneAndUpdate(
       { studentId, gameType },
-      { $push: { items: { $each: newItems, $slice: -POOL_TARGET } } },
+      { $push: { items: { $each: newItems.slice(0, needed) } } },
       { upsert: true, new: true }
     );
 

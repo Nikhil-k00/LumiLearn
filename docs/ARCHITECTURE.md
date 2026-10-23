@@ -6,7 +6,7 @@
 ┌──────────────────────────────────────────────────────────────────────┐
 │  Browser (child / parent)                                            │
 │                                                                      │
-│  Next.js 14 App Router (frontend — port 3000)                        │
+│  Next.js 16 App Router (frontend — port 3000)                        │
 │  • Tailwind CSS + Lexend font + Framer Motion                        │
 │  • AccessibilityContext (font toggle, large text, reduced motion)    │
 │  • Pages: /login  /register  /dashboard  /games/*  /parent-zone     │

@@ -3,8 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { Volume2, ChevronRight, ChevronLeft } from "lucide-react";
-import { useTTS } from "@/hooks/useTTS";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 const AVATARS = ["🚀","🐉","🦄","🤖","🧙","🧚","🦁","👾","🐬","🦕","🦸","🦊"];
 const THEMES  = ["Space","Fantasy","Ocean","Jungle","Dinosaur","Fairy Tale"];
@@ -18,7 +17,6 @@ const READING_LEVELS = [
 
 export default function RegisterStudentPage() {
   const { registerStudent } = useAuth();
-  const { speak }           = useTTS();
   const router              = useRouter();
   const [step,  setStep]    = useState(1);
   const [error, setError]   = useState("");

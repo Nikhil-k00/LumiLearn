@@ -22,12 +22,12 @@ export const metadata: Metadata = {
     "Every game directly addresses phonological awareness, reading fluency, " +
     "and working memory through play.",
   keywords: ["dyslexia", "learning", "children", "phonics", "reading", "games", "AI"],
-  themeColor: "#F8F7FF",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5, // allow user zoom — accessibility requirement
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5, // allow user zoom — accessibility requirement
 };
 
 // ─── App Shell (pure structural component, no client logic) ────────────────

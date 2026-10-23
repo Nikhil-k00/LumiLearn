@@ -18,6 +18,11 @@ const AchievementSchema = new Schema<IAchievement>({
   earnedAt:    { type: Date, default: Date.now },
 });
 
+// Enforce the business invariant that each student can only earn a specific badge once.
+// This prevents races where two nearly simultaneous sessions both read "not yet earned"
+// and then insert the same badge document.
+AchievementSchema.index({ studentId: 1, badgeId: 1 }, { unique: true });
+
 const Achievement: Model<IAchievement> = mongoose.model<IAchievement>(
   "Achievement",
   AchievementSchema

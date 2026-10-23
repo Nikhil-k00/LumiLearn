@@ -10,9 +10,9 @@ Every game mechanic directly addresses a clinical dyslexia deficit — phonologi
 
 | Service | Stack | Port |
 |---------|-------|------|
-| `frontend/` | Next.js 14 · TypeScript · Tailwind CSS · Framer Motion | 3000 |
+| `frontend/` | Next.js 16 · TypeScript · Tailwind CSS · Framer Motion | 3000 |
 | `backend/` | Node.js · Express · TypeScript · MongoDB (Mongoose) | 5000 |
-| `ai-service/` | Python · FastAPI · OpenAI GPT-4o | 8000 |
+| `ai-service/` | Python · FastAPI · OpenAI API integration | 8000 |
 
 ---
 
