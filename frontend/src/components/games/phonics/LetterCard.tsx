@@ -21,8 +21,8 @@ const variantStyles: Record<string, string> = {
 
 export function LetterCard({ letter, emoji, hint, onClick, variant = "default", size = "lg" }: LetterCardProps) {
   const { speak } = useTTS();
-  const fontSize   = size === "lg" ? "text-[72px]"  : "text-[56px]";
-  const cardSize   = size === "lg" ? "w-36 h-36"    : "w-28 h-28";
+  const fontSize   = size === "lg" ? "text-[56px] sm:text-[72px]" : "text-[48px] sm:text-[56px]";
+  const cardSize   = size === "lg" ? "w-28 h-28 sm:w-36 sm:h-36"  : "w-24 h-24 sm:w-28 sm:h-28";
 
   return (
     <motion.div

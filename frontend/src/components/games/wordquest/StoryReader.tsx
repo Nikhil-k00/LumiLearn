@@ -14,20 +14,26 @@ interface StoryReaderProps {
 
 export function StoryReader({ stories, onAnswer, onRoundComplete, onTTSUse }: StoryReaderProps) {
   const { speak }   = useTTS();
-  const [story]     = useState(() => stories[Math.floor(Math.random() * stories.length)]);
+  const [story, setStory] = useState(() => stories[0]);
+  const [storyReady, setStoryReady] = useState(false);
   const [lineIdx,   setLineIdx]   = useState(0);
   const [phase,     setPhase]     = useState<"reading" | "quiz">("reading");
   const [qIdx,      setQIdx]      = useState(0);
   const [selected,  setSelected]  = useState<number | null>(null);
   const [feedback,  setFeedback]  = useState<"idle" | "correct" | "wrong">("idle");
 
+  useEffect(() => {
+    setStory(stories[Math.floor(Math.random() * stories.length)]);
+    setStoryReady(true);
+  }, [stories]);
+
   // Auto-read current line
   useEffect(() => {
-    if (phase === "reading" && story) {
+    if (storyReady && phase === "reading" && story) {
       setTimeout(() => { speak(story.lines[lineIdx], 0.8); onTTSUse(); }, 400);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lineIdx, phase]);
+  }, [lineIdx, phase, storyReady, story]);
 
   const nextLine = () => {
     if (lineIdx + 1 < story.lines.length) {

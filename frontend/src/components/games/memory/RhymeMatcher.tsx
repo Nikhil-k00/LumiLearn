@@ -25,23 +25,30 @@ const DEFAULT_RHYME_PAIRS: RhymePair[] = [
 
 export function RhymeMatcher({ pairs, onResult, onRoundComplete }: RhymeMatcherProps) {
   const { speak }  = useTTS();
-  const [queue]    = useState(() => {
+  const [queue, setQueue] = useState(() => {
     const activePool = pairs && pairs.length > 0 ? pairs : DEFAULT_RHYME_PAIRS;
-    return shuffle(activePool).slice(0, 8);
+    return activePool.slice(0, 8);
   });
+  const [queueReady, setQueueReady] = useState(false);
   const [index,    setIndex]   = useState(0);
   const [feedback, setFeedback]= useState<"idle" | "correct" | "wrong">("idle");
 
   const current = queue[index];
 
   useEffect(() => {
-    if (current) {
+    const activePool = pairs && pairs.length > 0 ? pairs : DEFAULT_RHYME_PAIRS;
+    setQueue(shuffle(activePool).slice(0, 8));
+    setQueueReady(true);
+  }, [pairs]);
+
+  useEffect(() => {
+    if (queueReady && current) {
       // Auto-play both words
       setTimeout(() => speak(current.word1, 0.8), 400);
       setTimeout(() => speak(current.word2, 0.8), 1000);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [index, queueReady]);
 
   const handleAnswer = (userSaysRhymes: boolean) => {
     if (feedback !== "idle") return;
@@ -63,10 +70,10 @@ export function RhymeMatcher({ pairs, onResult, onRoundComplete }: RhymeMatcherP
       <p className="text-game text-indigo-700 font-semibold text-center">Do these words rhyme?</p>
 
       {/* Two word cards */}
-      <div className="flex gap-6">
+      <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
         {[{ word: current.word1, emoji: current.emoji1 }, { word: current.word2, emoji: current.emoji2 }].map(({ word, emoji }) => (
           <motion.div key={word}
-            className="flex flex-col items-center gap-3 w-40 bg-white rounded-card p-6 shadow-card border border-lavender-accent/30">
+            className="flex w-40 flex-col items-center gap-3 bg-white rounded-card p-6 shadow-card border border-lavender-accent/30">
             <span className="text-7xl">{emoji}</span>
             <span className="text-3xl font-bold text-indigo-900">{word}</span>
             <button onClick={() => speak(word, 0.8)}
@@ -84,7 +91,7 @@ export function RhymeMatcher({ pairs, onResult, onRoundComplete }: RhymeMatcherP
       </button>
 
       {/* YES / NO */}
-      <div className="flex gap-6 mt-4">
+      <div className="mt-4 flex flex-wrap justify-center gap-4 sm:gap-6">
         <motion.button whileTap={{ scale: 0.92 }} onClick={() => handleAnswer(true)}
           className="w-40 py-6 rounded-card bg-mint-pastel border-2 border-mint-accent text-3xl font-bold text-indigo-900 shadow-card">
           ✅ Yes

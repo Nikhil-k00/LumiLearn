@@ -18,6 +18,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const CHART_OPTIONS = {
   responsive: true,
+  maintainAspectRatio: false,
   plugins: { legend: { display: false } },
   scales: {
     y: { min: 0, max: 100, grid: { color: "#EDE9FE" }, ticks: { color: "#7C3AED", font: { size: 12 } } },
@@ -100,8 +101,8 @@ export default function ParentZonePage() {
   );
 
   return (
-    <div className="min-h-screen bg-page px-4 py-6 flex flex-col items-center gap-6">
-      <div className="w-full max-w-2xl flex flex-col gap-6">
+    <div className="min-h-screen bg-page px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
 
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -122,17 +123,19 @@ export default function ParentZonePage() {
           <>
             {/* Student summary */}
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-card shadow-card border border-lavender-accent/20 p-5">
+              className="bg-white rounded-card shadow-card border border-lavender-accent/20 p-4 sm:p-6">
               <h2 className="text-lg font-bold text-indigo-900 mb-4">📊 Overall Progress</h2>
-              <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-3 sm:gap-4">
                 {[
                   { label: "Phonics",  score: summary.phonicsScore, color: "bg-sky-pastel"      },
                   { label: "Reading",  score: summary.readingScore,  color: "bg-mint-pastel"     },
                   { label: "Memory",   score: summary.memoryScore,   color: "bg-lavender-pastel" },
                 ].map((s) => (
-                  <div key={s.label} className={`rounded-xl p-3 text-center ${s.color}`}>
-                    <p className="text-[11px] text-indigo-500 font-semibold uppercase">{s.label}</p>
-                    <p className="text-2xl font-bold text-indigo-900">{s.score}<span className="text-[13px] text-indigo-400">/100</span></p>
+                  <div key={s.label} className={`flex h-24 flex-col items-center justify-center rounded-xl p-3 text-center ${s.color}`}>
+                    <p className="text-xs leading-5 text-indigo-500 font-semibold uppercase">{s.label}</p>
+                    <p className="flex items-baseline justify-center whitespace-nowrap text-2xl leading-tight font-bold text-indigo-900">
+                      {s.score}<span className="text-[13px] text-indigo-400">/100</span>
+                    </p>
                   </div>
                 ))}
               </div>
@@ -144,30 +147,32 @@ export default function ParentZonePage() {
             {/* Charts */}
             {analytics && analytics.labels.length > 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-                className="bg-white rounded-card shadow-card border border-lavender-accent/20 p-5">
+                className="bg-white rounded-card shadow-card border border-lavender-accent/20 p-4 sm:p-6">
                 <h2 className="text-lg font-bold text-indigo-900 mb-4">📈 7-Day Progress</h2>
-                <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {[
                     { label: "Phonics",  data: analytics.phonics,  color: "#7DD3FC" },
                     { label: "Reading",  data: analytics.reading,  color: "#6EE7B7" },
                     { label: "Memory",   data: analytics.memory,   color: "#C4B5FD" },
                   ].map((c) => (
-                    <div key={c.label}>
+                    <div key={c.label} className="min-w-0 rounded-xl bg-page/70 p-3 sm:p-4">
                       <p className="text-base font-semibold text-indigo-700 mb-2">{c.label} Score</p>
-                      <Line
-                        options={CHART_OPTIONS}
-                        data={{
-                          labels: analytics.labels,
-                          datasets: [{
-                            data: c.data,
-                            borderColor: c.color,
-                            backgroundColor: c.color + "33",
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                          }],
-                        }}
-                      />
+                      <div className="relative h-56 w-full">
+                        <Line
+                          options={CHART_OPTIONS}
+                          data={{
+                            labels: analytics.labels,
+                            datasets: [{
+                              data: c.data,
+                              borderColor: c.color,
+                              backgroundColor: c.color + "33",
+                              fill: true,
+                              tension: 0.4,
+                              pointRadius: 4,
+                            }],
+                          }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>

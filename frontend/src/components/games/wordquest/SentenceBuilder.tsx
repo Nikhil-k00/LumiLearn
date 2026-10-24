@@ -27,11 +27,12 @@ function normaliseWords(words: string[]): string[] {
 
 export function SentenceBuilder({ sentences, onAnswer, onRoundComplete, onTTSUse }: SentenceBuilderProps) {
   const { speak }  = useTTS();
-  const [queue]    = useState(() =>
-    shuffle(sentences)
+  const [queue, setQueue] = useState(() =>
+    sentences
       .slice(0, 5)
       .map((s) => ({ ...s, words: normaliseWords(s.words) }))
   );
+  const [queueReady, setQueueReady] = useState(false);
   const [index,    setIndex]    = useState(0);
   const [pool,     setPool]     = useState<string[]>([]);
   const [built,    setBuilt]    = useState<string[]>([]);
@@ -40,12 +41,19 @@ export function SentenceBuilder({ sentences, onAnswer, onRoundComplete, onTTSUse
   const current = queue[index];
 
   useEffect(() => {
-    if (current) {
+    setQueue(shuffle(sentences)
+      .slice(0, 5)
+      .map((s) => ({ ...s, words: normaliseWords(s.words) })));
+    setQueueReady(true);
+  }, [sentences]);
+
+  useEffect(() => {
+    if (queueReady && current) {
       setPool(shuffle([...current.words]));
       setBuilt([]);
       setFeedback("idle");
     }
-  }, [index, current]);
+  }, [index, current, queueReady]);
 
   const pickWord = (word: string, poolIdx: number) => {
     if (feedback !== "idle") return;
@@ -92,7 +100,7 @@ export function SentenceBuilder({ sentences, onAnswer, onRoundComplete, onTTSUse
       </p>
 
       {/* Assembly area */}
-      <div className="min-h-[100px] w-full flex flex-wrap gap-4 items-center
+      <div className="min-h-[100px] w-full flex flex-wrap gap-4 items-center justify-center
                       bg-white/70 rounded-card px-6 py-6 shadow-card border border-lavender-accent/30">
         {built.length === 0
           ? <p className="text-indigo-300 text-xl">Tap words below to build the sentence...</p>

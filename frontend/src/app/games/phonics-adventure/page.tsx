@@ -139,9 +139,9 @@ export default function PhonicsAdventurePage() {
   const currentGame = GAME_SEQUENCE[gameIndex];
 
   return (
-    <div className="min-h-screen bg-page px-4 py-6 flex flex-col items-center">
+    <div className="min-h-screen bg-page px-4 py-6 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="w-full max-w-lg flex items-center gap-3 mb-6">
+      <div className="mx-auto mb-6 flex w-full max-w-6xl items-center gap-3">
         <Link href="/dashboard/student" className="p-2 rounded-full bg-lavender-pastel border border-lavender-accent">
           <ArrowLeft size={20} className="text-indigo-700" />
         </Link>
@@ -163,7 +163,7 @@ export default function PhonicsAdventurePage() {
 
       {/* Sequential progress indicator — shown during play and between games */}
       {phase !== "complete" && (
-        <div className="w-full max-w-lg flex items-center gap-2 mb-5">
+        <div className="mx-auto mb-5 flex w-full max-w-6xl items-center gap-2">
           {GAME_SEQUENCE.map((g, i) => {
             const done    = i < gameIndex;
             const active  = i === gameIndex;
@@ -189,7 +189,7 @@ export default function PhonicsAdventurePage() {
 
       {/* Stats bar — visible while playing */}
       {phase === "playing" && (
-        <div className="w-full max-w-lg flex gap-3 mb-4">
+        <div className="mx-auto mb-4 flex w-full max-w-5xl gap-3">
           <div className="flex-1 rounded-xl bg-mint-pastel px-4 py-2 text-center">
             <p className="text-[11px] text-mint-accent font-semibold">Score</p>
             <p className="text-lg font-bold text-indigo-900">{session.score}</p>
@@ -202,7 +202,7 @@ export default function PhonicsAdventurePage() {
       )}
 
       {/* Main content */}
-      <div className="w-full max-w-lg">
+      <div className="mx-auto w-full max-w-5xl">
         <AnimatePresence mode="wait">
 
           {/* ── Brief loading gate — waits for peek before mounting mini-games ── */}
@@ -250,7 +250,7 @@ export default function PhonicsAdventurePage() {
           {/* ── Between games — "Next Game" prompt ──────────────────────── */}
           {phase === "between" && (
             <motion.div key="between" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-6 bg-white rounded-card p-8 shadow-card border border-mint-accent/20 text-center">
+              className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 bg-white rounded-card p-8 shadow-card border border-mint-accent/20 text-center">
               <span className="text-5xl">🌟</span>
               <h2 className="text-2xl font-bold text-indigo-900">
                 {GAME_META[currentGame].title} Complete!

@@ -16,7 +16,8 @@ function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 
 
 export function PictureWordMatch({ pairs, onAnswer, onRoundComplete, onTTSUse }: PictureWordMatchProps) {
   const { speak }   = useTTS();
-  const [queue]     = useState(() => shuffle(pairs).slice(0, 8));
+  const [queue, setQueue] = useState(() => pairs.slice(0, 8));
+  const [queueReady, setQueueReady] = useState(false);
   const [index,     setIndex]   = useState(0);
   const [options,   setOptions] = useState<WordPicturePair[]>([]);
   const [feedback,  setFeedback]= useState<"idle" | "correct" | "wrong">("idle");
@@ -25,11 +26,16 @@ export function PictureWordMatch({ pairs, onAnswer, onRoundComplete, onTTSUse }:
   const current = queue[index];
 
   useEffect(() => {
-    if (current) {
+    setQueue(shuffle(pairs).slice(0, 8));
+    setQueueReady(true);
+  }, [pairs]);
+
+  useEffect(() => {
+    if (queueReady && current) {
       const others = shuffle(pairs.filter((p) => p.word !== current.word)).slice(0, 3);
       setOptions(shuffle([current, ...others]));
     }
-  }, [index, current, pairs]);
+  }, [index, current, pairs, queueReady]);
 
   const handlePick = (word: string) => {
     if (feedback !== "idle") return;
@@ -56,7 +62,7 @@ export function PictureWordMatch({ pairs, onAnswer, onRoundComplete, onTTSUse }:
       <p className="text-game text-indigo-700 font-medium">Which word matches this picture?</p>
 
       {/* Word options — each has TTS button */}
-      <div className="grid grid-cols-2 gap-4 w-full px-2">
+      <div className="mx-auto grid w-full max-w-3xl grid-cols-2 gap-4 px-2">
         {options.map((opt) => (
           <motion.div key={opt.word} whileTap={{ scale: 0.95 }} className="relative">
             <button

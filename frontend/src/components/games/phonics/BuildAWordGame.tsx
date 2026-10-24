@@ -39,11 +39,12 @@ function normalisePhonemes(word: string, phonemes: string[]): string[] {
 
 export function BuildAWordGame({ words, onAnswer, onRoundComplete }: BuildAWordGameProps) {
   const { speak }    = useTTS();
-  const [queue]      = useState(() =>
-    shuffle(words)
+  const [queue, setQueue] = useState(() =>
+    words
       .slice(0, 6)
       .map((w) => ({ ...w, phonemes: normalisePhonemes(w.word, w.phonemes) }))
   );
+  const [queueReady, setQueueReady] = useState(false);
   const [index,      setIndex]    = useState(0);
   const [letters,    setLetters]  = useState<string[]>([]);  // scrambled pool
   const [assembled,  setAssembled]= useState<string[]>([]);   // child's answer
@@ -52,7 +53,14 @@ export function BuildAWordGame({ words, onAnswer, onRoundComplete }: BuildAWordG
   const current = queue[index];
 
   useEffect(() => {
-    if (current) {
+    setQueue(shuffle(words)
+      .slice(0, 6)
+      .map((w) => ({ ...w, phonemes: normalisePhonemes(w.word, w.phonemes) })));
+    setQueueReady(true);
+  }, [words]);
+
+  useEffect(() => {
+    if (queueReady && current) {
       setLetters(shuffle([...current.phonemes]));
       setAssembled([]);
       setFeedback("idle");
@@ -61,7 +69,7 @@ export function BuildAWordGame({ words, onAnswer, onRoundComplete }: BuildAWordG
       setTimeout(() => speak(current.word, 0.8), 300);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [index, queueReady]);
 
   const pickLetter = (letter: string, fromIndex: number) => {
     if (feedback !== "idle") return;

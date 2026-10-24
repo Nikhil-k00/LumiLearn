@@ -111,6 +111,12 @@ function buildQueue(sounds: BeginningSound[]): BeginningSound[] {
   return shuffle(pool).slice(0, 6);
 }
 
+function buildInitialQueue(sounds: BeginningSound[]): BeginningSound[] {
+  const incoming = sounds && sounds.length >= 2 ? sanitisePool(sounds) : [];
+  const pool     = incoming.length >= 2 ? incoming : DEFAULT_BEGINNING_SOUNDS;
+  return pool.slice(0, 6);
+}
+
 export function BeginningStart({ sounds, onResult, onRoundComplete }: BeginningStartProps) {
   const { speak }   = useTTS();
 
@@ -118,7 +124,7 @@ export function BeginningStart({ sounds, onResult, onRoundComplete }: BeginningS
   // exactly once when real AI content arrives (sounds changes from static→AI).
   const prevSoundsRef = useRef<BeginningSound[]>(sounds);
 
-  const [queue,    setQueue]    = useState<BeginningSound[]>(() => buildQueue(sounds));
+  const [queue,    setQueue]    = useState<BeginningSound[]>(() => buildInitialQueue(sounds));
   const [index,    setIndex]    = useState(0);
   const [feedback, setFeedback] = useState<"idle" | "correct" | "wrong">("idle");
   const [selected, setSelected] = useState<string | null>(null);
@@ -127,7 +133,9 @@ export function BeginningStart({ sounds, onResult, onRoundComplete }: BeginningS
   // started yet (index === 0, no answer given). This handles the case where
   // BeginningStart mounts briefly with static data then gets AI data via props.
   useEffect(() => {
-    if (sounds !== prevSoundsRef.current && index === 0 && feedback === "idle") {
+    if (sounds === prevSoundsRef.current) {
+      setQueue(buildQueue(sounds));
+    } else if (index === 0 && feedback === "idle") {
       prevSoundsRef.current = sounds;
       setQueue(buildQueue(sounds));
       setIndex(0);

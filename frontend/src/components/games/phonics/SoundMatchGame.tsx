@@ -23,7 +23,8 @@ function buildOptions(correct: PhonicsWord, pool: PhonicsWord[]): PhonicsWord[] 
 
 export function SoundMatchGame({ words, onAnswer, onRoundComplete }: SoundMatchGameProps) {
   const { speak } = useTTS();
-  const [queue]     = useState<PhonicsWord[]>(() => shuffle(words).slice(0, 8));
+  const [queue,     setQueue]     = useState<PhonicsWord[]>(() => words.slice(0, 8));
+  const [queueReady, setQueueReady] = useState(false);
   const [index,     setIndex]     = useState(0);
   const [options,   setOptions]   = useState<PhonicsWord[]>([]);
   const [feedback,  setFeedback]  = useState<"idle" | "correct" | "wrong">("idle");
@@ -33,14 +34,19 @@ export function SoundMatchGame({ words, onAnswer, onRoundComplete }: SoundMatchG
   const current = queue[index];
 
   useEffect(() => {
-    if (current) {
+    setQueue(shuffle(words).slice(0, 8));
+    setQueueReady(true);
+  }, [words]);
+
+  useEffect(() => {
+    if (queueReady && current) {
       setOptions(buildOptions(current, words));
       // Speak the plain word — clear natural pronunciation.
       // audioHint ("c-a-t") was causing robotic letter-spelling.
       setTimeout(() => speak(current.word, 0.8), 400);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, current]);
+  }, [index, current, queueReady]);
 
   const handleSelect = (word: PhonicsWord) => {
     if (feedback !== "idle") return;

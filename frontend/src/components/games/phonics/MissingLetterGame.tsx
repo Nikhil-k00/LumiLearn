@@ -42,11 +42,12 @@ function buildQuestion(word: PhonicsWord, pairs: ConfusionPair[]) {
 
 export function MissingLetterGame({ words, confusionPairs, onAnswer, onRoundComplete }: MissingLetterGameProps) {
   const { speak }   = useTTS();
-  const [queue]     = useState(() => {
+  const [queue, setQueue] = useState(() => {
     const filtered = words.filter((w) => w.confusionRisk);
     const pool = filtered.length > 0 ? filtered : words;
-    return shuffle(pool).slice(0, 8);
+    return pool.slice(0, 8);
   });
+  const [queueReady, setQueueReady] = useState(false);
   const [index,     setIndex]    = useState(0);
   const [question,  setQuestion] = useState<ReturnType<typeof buildQuestion> | null>(null);
   const [feedback,  setFeedback] = useState<"idle" | "correct" | "wrong">("idle");
@@ -55,7 +56,14 @@ export function MissingLetterGame({ words, confusionPairs, onAnswer, onRoundComp
   const current = queue[index];
 
   useEffect(() => {
-    if (current) {
+    const filtered = words.filter((w) => w.confusionRisk);
+    const pool = filtered.length > 0 ? filtered : words;
+    setQueue(shuffle(pool).slice(0, 8));
+    setQueueReady(true);
+  }, [words]);
+
+  useEffect(() => {
+    if (queueReady && current) {
       setQuestion(buildQuestion(current, confusionPairs));
       setFeedback("idle");
       setSelected(null);
@@ -63,7 +71,7 @@ export function MissingLetterGame({ words, confusionPairs, onAnswer, onRoundComp
       setTimeout(() => speak(current.word, 0.8), 300);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [index, queueReady]);
 
   const handlePick = (letter: string) => {
     if (feedback !== "idle" || !question) return;
