@@ -185,40 +185,38 @@ export function BeginningStart({ sounds, onResult, onRoundComplete }: BeginningS
   if (!current) return null;
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full">
-      <p className="text-game text-indigo-700 font-semibold text-center">
-        Which word starts with this sound?
-      </p>
+    <section className="flex w-full flex-col items-center gap-5 sm:gap-6" aria-labelledby="beginning-start-title">
+      <div className="text-center">
+        <h2 id="beginning-start-title" className="text-xl font-bold tracking-tight text-indigo-950 sm:text-2xl">
+          Which word starts with this sound?
+        </h2>
+        <p className="mt-1 text-base leading-relaxed text-muted">Listen to the sound, then choose a word.</p>
+      </div>
 
-      {/* Phoneme display card */}
       <motion.div
         key={current.phoneme}
         initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="flex flex-col items-center gap-4 bg-sunshine-pastel rounded-card px-10 py-7 shadow-card w-full max-w-xs"
+        className="flex w-full max-w-sm flex-col items-center gap-4 rounded-panel border border-sunshine-accent/60 bg-sunshine-pastel px-6 py-6 shadow-panel sm:px-10 sm:py-7"
       >
-        {/* Large, bold phoneme */}
-        <span className="text-5xl font-extrabold text-indigo-900 tracking-widest">
+        <span className="text-5xl font-extrabold tracking-widest text-indigo-950" aria-label={`Sound ${current.phoneme}`}>
           {current.phoneme}
         </span>
 
-        {/* Example word hint */}
-        <p className="text-sm text-indigo-500 font-medium">
+        <p className="text-base font-medium text-indigo-900">
           like in &ldquo;{current.options.find((o) => o.isCorrect)?.word}&rdquo;
         </p>
 
         <button
+          type="button"
           onClick={hearSound}
-          className="flex items-center gap-2 px-5 py-2 rounded-button bg-white/90
-                     border border-sunshine-accent text-indigo-800 text-base font-semibold
-                     hover:bg-white transition-all shadow-sm"
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control border border-sunshine-accent bg-surface px-5 py-3 text-base font-semibold text-indigo-950 shadow-sm transition-colors hover:bg-sunshine-pastel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
         >
-          <Volume2 size={18} className="text-amber-600" /> Hear it
+          <Volume2 size={18} className="text-amber-800" aria-hidden="true" /> Hear sound
         </button>
       </motion.div>
 
-      {/* Answer options — larger cards, more readable for children */}
-      <div className="flex gap-5 flex-wrap justify-center">
+      <div className="grid w-full max-w-xl grid-cols-1 justify-items-center gap-3 sm:grid-cols-3 sm:gap-4" role="group" aria-label="Word choices">
         {current.options.map((opt) => {
           const state =
             selected === opt.word && feedback === "correct" ? "correct" :
@@ -227,27 +225,36 @@ export function BeginningStart({ sounds, onResult, onRoundComplete }: BeginningS
           return (
             <motion.button
               key={opt.word}
+              type="button"
               whileTap={{ scale: 0.93 }}
               onClick={() => handlePick(opt.word, opt.isCorrect)}
               disabled={feedback !== "idle"}
-              className={`w-32 h-32 rounded-card border-2 flex flex-col items-center
-                          justify-center gap-2 shadow-card transition-all
-                          ${state === "correct" ? "bg-mint-pastel   border-mint-accent   scale-105" :
-                            state === "wrong"   ? "bg-peach-pastel  border-peach-accent" :
-                                                  "bg-lavender-pastel border-lavender-accent hover:shadow-card-hover hover:scale-105"}`}
+              aria-pressed={selected === opt.word}
+              aria-label={`${opt.word}${state === "correct" ? ", correct" : state === "wrong" ? ", incorrect" : ""}`}
+              className={`flex min-h-36 w-full max-w-44 flex-col items-center justify-center gap-2 rounded-panel border-2 px-4 py-4 shadow-panel transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-default ${
+                state === "correct" ? "border-emerald-800 bg-mint-pastel" :
+                state === "wrong" ? "border-orange-800 bg-peach-pastel" :
+                "border-lavender-accent bg-lavender-pastel hover:bg-lavender-accent/40"
+              }`}
             >
-              <span className="text-5xl leading-none">{opt.emoji}</span>
-              <span className="text-lg font-bold text-indigo-900 leading-tight">{opt.word}</span>
+              <span className="text-5xl leading-none" aria-hidden="true">{opt.emoji}</span>
+              <span className="text-lg font-bold leading-tight text-indigo-950">{opt.word}</span>
+              {selected === opt.word && (
+                <span className="text-sm font-bold text-indigo-950">
+                  {feedback === "correct" ? "✓ Correct" : "× Try again"}
+                </span>
+              )}
             </motion.button>
           );
         })}
       </div>
 
-      {/* Feedback banner */}
       <AnimateFeedback feedback={feedback} />
 
-      <p className="text-base text-indigo-400">{index + 1} / {queue.length}</p>
-    </div>
+      <p className="text-sm font-semibold tabular-nums text-muted" aria-label={`Question ${index + 1} of ${queue.length}`}>
+        {index + 1} of {queue.length}
+      </p>
+    </section>
   );
 }
 
@@ -257,9 +264,11 @@ function AnimateFeedback({ feedback }: { feedback: "idle" | "correct" | "wrong" 
     <motion.p
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className={`text-2xl font-bold ${feedback === "correct" ? "text-mint-accent" : "text-peach-accent"}`}
+      className="text-base font-semibold text-indigo-950"
+      role="status"
+      aria-live="polite"
     >
-      {feedback === "correct" ? "🌟 Correct!" : "💪 Try again!"}
+      {feedback === "correct" ? "✓ Correct! Great listening." : "× Try again! Listen for the first sound."}
     </motion.p>
   );
 }

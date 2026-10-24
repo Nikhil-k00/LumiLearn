@@ -32,6 +32,7 @@ export function RhymeMatcher({ pairs, onResult, onRoundComplete }: RhymeMatcherP
   const [queueReady, setQueueReady] = useState(false);
   const [index,    setIndex]   = useState(0);
   const [feedback, setFeedback]= useState<"idle" | "correct" | "wrong">("idle");
+  const [selected, setSelected] = useState<boolean | null>(null);
 
   const current = queue[index];
 
@@ -43,6 +44,7 @@ export function RhymeMatcher({ pairs, onResult, onRoundComplete }: RhymeMatcherP
 
   useEffect(() => {
     if (queueReady && current) {
+      setSelected(null);
       // Auto-play both words
       setTimeout(() => speak(current.word1, 0.8), 400);
       setTimeout(() => speak(current.word2, 0.8), 1000);
@@ -54,6 +56,7 @@ export function RhymeMatcher({ pairs, onResult, onRoundComplete }: RhymeMatcherP
     if (feedback !== "idle") return;
     const isOk = userSaysRhymes === current.rhymes;
     onResult(isOk);
+    setSelected(userSaysRhymes);
     setFeedback(isOk ? "correct" : "wrong");
     speak(isOk ? "That's right!" : `${current.word1} and ${current.word2} ${current.rhymes ? "do" : "do not"} rhyme.`);
     setTimeout(() => {
@@ -66,46 +69,78 @@ export function RhymeMatcher({ pairs, onResult, onRoundComplete }: RhymeMatcherP
   if (!current) return null;
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <p className="text-game text-indigo-700 font-semibold text-center">Do these words rhyme?</p>
+    <section className="flex w-full flex-col items-center gap-5 sm:gap-6" aria-labelledby="rhyme-matcher-title">
+      <div className="text-center">
+        <h2 id="rhyme-matcher-title" className="text-xl font-bold tracking-tight text-indigo-950 sm:text-2xl">
+          Do these words rhyme?
+        </h2>
+        <p className="mt-1 text-base leading-relaxed text-muted">Listen to both words, then choose Yes or No.</p>
+      </div>
 
-      {/* Two word cards */}
-      <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+      <div className="grid w-full max-w-xl grid-cols-2 gap-3 sm:gap-5">
         {[{ word: current.word1, emoji: current.emoji1 }, { word: current.word2, emoji: current.emoji2 }].map(({ word, emoji }) => (
-          <motion.div key={word}
-            className="flex w-40 flex-col items-center gap-3 bg-white rounded-card p-6 shadow-card border border-lavender-accent/30">
-            <span className="text-7xl">{emoji}</span>
-            <span className="text-3xl font-bold text-indigo-900">{word}</span>
-            <button onClick={() => speak(word, 0.8)}
-              className="p-2 rounded-full bg-sky-pastel border border-sky-accent mt-2">
-              <Volume2 size={20} className="text-sky-700" />
+          <motion.div
+            key={word}
+            className="flex min-w-0 flex-col items-center gap-3 rounded-panel border border-border-subtle bg-surface p-4 shadow-panel sm:p-6"
+          >
+            <span className="text-5xl sm:text-7xl" aria-hidden="true">{emoji}</span>
+            <span className="break-words text-2xl font-bold tracking-wide text-indigo-950 sm:text-3xl">{word}</span>
+            <button
+              type="button"
+              onClick={() => speak(word, 0.8)}
+              aria-label={`Hear ${word}`}
+              className="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-full border border-sky-accent bg-sky-pastel text-sky-800 transition-colors hover:bg-sky-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+            >
+              <Volume2 size={19} aria-hidden="true" />
             </button>
           </motion.div>
         ))}
       </div>
 
-      {/* Play both */}
-      <button onClick={() => { speak(current.word1, 0.8); setTimeout(() => speak(current.word2, 0.8), 800); }}
-        className="flex items-center gap-2 px-4 py-2 rounded-button bg-sunshine-pastel border border-sunshine-accent text-indigo-800 text-base">
-        <Volume2 size={16} /> Hear both
+      <button
+        type="button"
+        onClick={() => { speak(current.word1, 0.8); setTimeout(() => speak(current.word2, 0.8), 800); }}
+        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control border border-sunshine-accent/70 bg-sunshine-pastel px-5 py-3 text-base font-semibold text-indigo-950 transition-colors hover:bg-sunshine-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+      >
+        <Volume2 size={17} aria-hidden="true" /> Hear both words
       </button>
 
-      {/* YES / NO */}
-      <div className="mt-4 flex flex-wrap justify-center gap-4 sm:gap-6">
-        <motion.button whileTap={{ scale: 0.92 }} onClick={() => handleAnswer(true)}
-          className="w-40 py-6 rounded-card bg-mint-pastel border-2 border-mint-accent text-3xl font-bold text-indigo-900 shadow-card">
-          ✅ Yes
+      <div className="grid w-full max-w-md grid-cols-2 gap-3 sm:gap-4">
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.98 }}
+          onClick={() => handleAnswer(true)}
+          disabled={feedback !== "idle"}
+          aria-pressed={selected === true}
+          className={`min-h-16 rounded-panel border-2 px-4 py-4 text-xl font-bold text-indigo-950 shadow-panel transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-default sm:text-2xl ${
+            selected === true ? feedback === "correct" ? "border-emerald-800 bg-mint-pastel" : "border-orange-800 bg-peach-pastel" : "border-mint-accent bg-mint-pastel hover:bg-mint-accent/30"
+          }`}
+        >
+          <span aria-hidden="true">{selected === true ? feedback === "correct" ? "✓ " : "× " : ""}</span>Yes
         </motion.button>
-        <motion.button whileTap={{ scale: 0.92 }} onClick={() => handleAnswer(false)}
-          className="w-40 py-6 rounded-card bg-peach-pastel border-2 border-peach-accent text-3xl font-bold text-indigo-900 shadow-card">
-          ❌ No
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.98 }}
+          onClick={() => handleAnswer(false)}
+          disabled={feedback !== "idle"}
+          aria-pressed={selected === false}
+          className={`min-h-16 rounded-panel border-2 px-4 py-4 text-xl font-bold text-indigo-950 shadow-panel transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-default sm:text-2xl ${
+            selected === false ? feedback === "correct" ? "border-emerald-800 bg-mint-pastel" : "border-orange-800 bg-peach-pastel" : "border-peach-accent bg-peach-pastel hover:bg-peach-accent/30"
+          }`}
+        >
+          <span aria-hidden="true">{selected === false ? feedback === "correct" ? "✓ " : "× " : ""}</span>No
         </motion.button>
       </div>
 
-      {feedback === "correct" && <p className="text-2xl font-bold text-mint-accent">🌟 Correct!</p>}
-      {feedback === "wrong"   && <p className="text-xl text-peach-accent font-semibold">💪 Keep trying!</p>}
+      {feedback !== "idle" && (
+        <p className="text-base font-semibold text-indigo-950" role="status" aria-live="polite">
+          {feedback === "correct" ? "✓ That’s right!" : "↻ Keep trying! Listen to the words."}
+        </p>
+      )}
 
-      <p className="text-base text-indigo-400">{index + 1} / {queue.length}</p>
-    </div>
+      <p className="text-sm font-semibold tabular-nums text-muted" aria-label={`Pair ${index + 1} of ${queue.length}`}>
+        {index + 1} of {queue.length}
+      </p>
+    </section>
   );
 }

@@ -53,39 +53,58 @@ export function PictureWordMatch({ pairs, onAnswer, onRoundComplete, onTTSUse }:
   if (!current) return null;
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      {/* Picture target */}
-      <motion.div key={current.word} initial={{ scale: 0.8 }} animate={{ scale: 1 }}
-        className="text-8xl bg-sunshine-pastel rounded-card p-6 shadow-card">
+    <section className="flex w-full flex-col items-center gap-6" aria-labelledby="picture-match-prompt">
+      <motion.div
+        key={current.word}
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        className="flex min-h-40 min-w-40 items-center justify-center rounded-panel border border-sunshine-accent/60 bg-sunshine-pastel p-6 text-7xl shadow-panel sm:min-h-48 sm:min-w-48 sm:text-8xl"
+        role="img"
+        aria-label="Picture clue"
+      >
         {current.emoji}
       </motion.div>
-      <p className="text-game text-indigo-700 font-medium">Which word matches this picture?</p>
+      <div className="text-center">
+        <h2 id="picture-match-prompt" className="text-xl font-bold tracking-tight text-indigo-950 sm:text-2xl">
+          Which word matches this picture?
+        </h2>
+        <p className="mt-1 text-base leading-relaxed text-muted">Choose the word that names the picture.</p>
+      </div>
 
-      {/* Word options — each has TTS button */}
-      <div className="mx-auto grid w-full max-w-3xl grid-cols-2 gap-4 px-2">
+      <div className="grid w-full max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         {options.map((opt) => (
-          <motion.div key={opt.word} whileTap={{ scale: 0.95 }} className="relative">
+          <motion.div key={opt.word} whileTap={{ scale: 0.98 }} className="relative">
             <button
+              type="button"
               onClick={() => handlePick(opt.word)}
-              className={`w-full py-8 px-4 rounded-card border-2 text-3xl font-bold transition-all shadow-card
+              disabled={feedback !== "idle"}
+              aria-pressed={selected === opt.word}
+              className={`w-full min-h-20 rounded-panel border-2 px-12 py-5 text-2xl font-bold tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 sm:text-3xl
                 ${selected === opt.word && feedback === "correct" ? "bg-mint-pastel border-mint-accent" :
                   selected === opt.word && feedback === "wrong"   ? "bg-peach-pastel border-peach-accent" :
-                  "bg-white border-lavender-accent hover:shadow-card-hover hover:bg-lavender-pastel"}`}
+                  "bg-surface border-border-strong shadow-panel hover:bg-lavender-pastel"}`}
             >
               {opt.word}
             </button>
-            {/* TTS button overlay */}
             <button
+              type="button"
               onClick={(e) => { e.stopPropagation(); speak(opt.word); onTTSUse(); }}
-              className="absolute top-2 right-2 p-2 rounded-full bg-sky-pastel border border-sky-accent"
+              className="absolute right-2 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-sky-accent bg-sky-pastel text-sky-800 transition-colors hover:bg-sky-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
               aria-label={`Hear ${opt.word}`}
             >
-              <Volume2 size={20} className="text-sky-700" />
+              <Volume2 size={19} aria-hidden="true" />
             </button>
           </motion.div>
         ))}
       </div>
-      <p className="text-base text-indigo-400">{index + 1} / {queue.length}</p>
-    </div>
+      {feedback !== "idle" && (
+        <p className="text-base font-semibold text-indigo-950" role="status" aria-live="polite">
+          {feedback === "correct" ? "That’s right! Great matching." : "Not quite. Keep going!"}
+        </p>
+      )}
+      <p className="text-sm font-semibold tabular-nums text-muted" aria-label={`Question ${index + 1} of ${queue.length}`}>
+        {index + 1} of {queue.length}
+      </p>
+    </section>
   );
 }

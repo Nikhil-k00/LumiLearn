@@ -94,54 +94,76 @@ export function MissingLetterGame({ words, confusionPairs, onAnswer, onRoundComp
   if (!current || !question) return null;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full">
+    <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 sm:gap-8" aria-label="Missing Letter">
       {/* Word with blank */}
       <motion.div
         key={current.word}
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center gap-4"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex w-full flex-col items-center"
       >
-        <div className="text-7xl">{current.emoji}</div>
-        <div className="flex items-center gap-2">
-          <span className="text-[42px] font-bold tracking-[0.12em] text-indigo-900 font-lexend">
-            {question.display.toUpperCase()}
-          </span>
-          <button
-            onClick={() => speak(current.word, 0.8)}
-            className="ml-2 p-2 rounded-full bg-sky-pastel border border-sky-accent"
-            aria-label="Hear the word"
-          >
-            <Volume2 size={20} className="text-sky-700" />
-          </button>
+        <div className="flex w-full max-w-xl flex-col items-center gap-4 rounded-panel border border-sky-accent/40 bg-sky-pastel/60 p-5 text-center sm:p-7">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-800">Find the missing letter</p>
+          <span className="text-6xl leading-none sm:text-7xl" aria-hidden="true">{current.emoji}</span>
+          <div className="flex max-w-full items-center gap-3 rounded-control bg-white/90 px-4 py-2">
+            <span aria-label={`Word pattern: ${question.display.split("").join(" ")}`} className="break-all text-4xl font-bold tracking-[0.08em] text-indigo-950 sm:text-5xl">
+              {question.display.toUpperCase()}
+            </span>
+            <button
+              type="button"
+              onClick={() => speak(current.word, 0.8)}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-sky-accent bg-sky-pastel text-indigo-800 transition-colors hover:bg-sky-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+              aria-label="Hear the whole word"
+            >
+              <Volume2 size={20} aria-hidden="true" />
+            </button>
+          </div>
+          <h2 className="text-xl font-bold leading-relaxed text-indigo-950 sm:text-2xl">Which letter fills the blank?</h2>
         </div>
-        <p className="text-game text-indigo-600">Which letter fills the blank?</p>
       </motion.div>
 
       {/* Two large option buttons */}
-      <div className="flex gap-6">
-        {question.options.map((letter) => {
+      <div className="grid w-full max-w-md grid-cols-2 gap-4 sm:gap-6" role="group" aria-label="Choose the missing letter">
+        {question.options.map((letter, index) => {
           const pair = confusionPairs.find((p) => p.letter1 === letter || p.letter2 === letter);
           const hint = pair?.letter1 === letter ? pair.hint1 : pair?.hint2 ?? "";
           return (
             <motion.button
-              key={letter}
-              whileTap={{ scale: 0.92 }}
-              animate={feedback === "wrong" && selected === letter ? { x: [0,-5,5,-5,5,0] } : {}}
+              key={`${letter}-${index}`}
+              type="button"
+              disabled={feedback !== "idle"}
+              whileTap={feedback === "idle" ? { scale: 0.97 } : undefined}
+              animate={feedback === "wrong" && selected === letter ? { x: [0,-4,4,-4,4,0] } : {}}
               onClick={() => handlePick(letter)}
-              className={`w-28 h-28 rounded-card flex flex-col items-center justify-center gap-1 border-2 shadow-card font-bold transition-all
-                ${selected === letter && feedback === "correct" ? "bg-mint-pastel border-mint-accent" :
-                  selected === letter && feedback === "wrong"   ? "bg-peach-pastel border-peach-accent" :
-                  "bg-lavender-pastel border-lavender-accent hover:shadow-card-hover"}`}
+              aria-label={`${letter.toUpperCase()}${hint ? `, ${hint}` : ""}`}
+              aria-pressed={selected === letter}
+              className={`flex min-h-28 flex-col items-center justify-center gap-2 rounded-panel border-2 px-3 py-4 shadow-panel transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-default sm:min-h-32
+                ${selected === letter && feedback === "correct" ? "border-mint-accent bg-mint-pastel" :
+                  selected === letter && feedback === "wrong"   ? "border-peach-accent bg-peach-pastel" :
+                  "border-lavender-accent bg-lavender-pastel hover:bg-lavender-accent/40"}`}
             >
-              <span className="text-[48px] leading-none">{letter.toUpperCase()}</span>
-              <span className="text-[10px] text-indigo-500 text-center px-1 leading-tight">{hint}</span>
+              <span className="text-5xl font-bold leading-none text-indigo-950" aria-hidden="true">{letter.toUpperCase()}</span>
+              {hint && <span className="text-sm font-medium leading-tight text-indigo-900">{hint}</span>}
             </motion.button>
           );
         })}
       </div>
 
-      <p className="text-base text-indigo-400">{index + 1} / {queue.length}</p>
-    </div>
+      {feedback !== "idle" && (
+        <p className={`rounded-control border px-5 py-3 text-lg font-semibold ${feedback === "correct" ? "border-mint-accent/50 bg-mint-pastel text-success" : "border-peach-accent/60 bg-peach-pastel text-error-text"}`} role="status" aria-live="polite">
+          {feedback === "correct" ? "Yes! That's the right letter." : "Good try! Listen and look carefully."}
+        </p>
+      )}
+
+      <div className="w-full max-w-xl">
+        <div className="mb-2 flex items-center justify-between text-sm font-semibold text-indigo-900">
+          <span>Question {index + 1} of {queue.length}</span>
+          <span>{Math.round(((index + 1) / queue.length) * 100)}%</span>
+        </div>
+        <div className="h-2.5 overflow-hidden rounded-full bg-surface-soft" role="progressbar" aria-label="Missing Letter progress" aria-valuemin={0} aria-valuemax={queue.length} aria-valuenow={index + 1}>
+          <div className="h-full rounded-full bg-lavender-accent transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${((index + 1) / queue.length) * 100}%` }} />
+        </div>
+      </div>
+    </section>
   );
 }

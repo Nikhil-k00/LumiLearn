@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import colors from "tailwindcss/colors";
 
 const config: Config = {
   content: [
@@ -12,39 +13,60 @@ const config: Config = {
       fontFamily: {
         lexend: ["Lexend", "sans-serif"],
         opendyslexic: ["OpenDyslexic", "sans-serif"],
+        display: ["var(--font-display)", "sans-serif"],
         sans: ["Lexend", "sans-serif"], // override default
       },
 
       // ─── Pastel Colour Palette ───────────────────────────────────────────
       colors: {
+        indigo: colors.blue,
+        violet: colors.blue,
         sky: {
-          pastel: "#E0F2FE",
-          accent: "#7DD3FC",
+          pastel: "rgb(var(--color-sky-pastel-rgb) / <alpha-value>)",
+          accent: "rgb(var(--color-sky-accent-rgb) / <alpha-value>)",
         },
         mint: {
-          pastel: "#D1FAE5",
-          accent: "#6EE7B7",
+          pastel: "rgb(var(--color-mint-pastel-rgb) / <alpha-value>)",
+          accent: "rgb(var(--color-mint-accent-rgb) / <alpha-value>)",
         },
         lavender: {
-          pastel: "#EDE9FE",
-          accent: "#C4B5FD",
+          pastel: "rgb(var(--color-lavender-pastel-rgb) / <alpha-value>)",
+          accent: "rgb(var(--color-lavender-accent-rgb) / <alpha-value>)",
         },
         peach: {
-          pastel: "#FEE2E2",
-          accent: "#FCA5A5",
+          pastel: "rgb(var(--color-peach-pastel-rgb) / <alpha-value>)",
+          accent: "rgb(var(--color-peach-accent-rgb) / <alpha-value>)",
         },
         sunshine: {
-          pastel: "#FEF9C3",
-          accent: "#FDE047",
+          pastel: "rgb(var(--color-sunshine-pastel-rgb) / <alpha-value>)",
+          accent: "rgb(var(--color-sunshine-accent-rgb) / <alpha-value>)",
         },
         // Neutral page background
-        page: "#F8F7FF",
+        page: "rgb(var(--color-page-bg-rgb) / <alpha-value>)",
+        ink: "var(--color-ink)",
+        muted: "var(--color-text-muted)",
+        subtle: "var(--color-text-subtle)",
+        focus: "var(--color-focus)",
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          warm: "var(--color-surface-warm)",
+          soft: "var(--color-surface-soft)",
+        },
+        border: {
+          subtle: "var(--color-border-subtle)",
+          strong: "var(--color-border-strong)",
+        },
+        success: "var(--color-success-text)",
+        warning: "var(--color-warning-text)",
+        error: "var(--color-error-text)",
       },
 
       // ─── Border Radius ───────────────────────────────────────────────────
       borderRadius: {
-        card: "1.5rem",   // rounded-3xl equivalent
-        button: "9999px", // rounded-full equivalent
+        card: "var(--radius-card)",
+        panel: "var(--radius-panel)",
+        control: "var(--radius-control)",
+        button: "var(--radius-button)",
       },
 
       // ─── Font Sizes (dyslexia-friendly — minimum 18 px) ──────────────────
@@ -54,6 +76,10 @@ const config: Config = {
         xl:   ["26px", { lineHeight: "1.8", letterSpacing: "0.05em" }],
         "2xl":["32px", { lineHeight: "1.75", letterSpacing: "0.03em" }],
         "3xl":["40px", { lineHeight: "1.6",  letterSpacing: "0.02em" }],
+        caption: ["13px", { lineHeight: "1.4" }],
+        "body-sm": ["15px", { lineHeight: "1.6" }],
+        heading: ["36px", { lineHeight: "var(--line-height-heading)", letterSpacing: "-0.02em" }],
+        display: ["48px", { lineHeight: "var(--line-height-heading)", letterSpacing: "-0.02em" }],
         // Game-specific (children tap targets)
         game: ["24px", { lineHeight: "1.6",  letterSpacing: "0.05em" }],
         "game-target": ["36px", { lineHeight: "1.5", letterSpacing: "0.05em" }],
@@ -69,18 +95,24 @@ const config: Config = {
       lineHeight: {
         reading: "1.8",
         relaxed: "1.625",
+        heading: "var(--line-height-heading)",
       },
 
       // ─── Box Shadow (soft, no harsh drop shadows) ────────────────────────
       boxShadow: {
-        card: "0 4px 24px 0 rgba(139, 92, 246, 0.07), 0 1px 4px 0 rgba(0,0,0,0.04)",
-        "card-hover": "0 8px 32px 0 rgba(139, 92, 246, 0.12), 0 2px 8px 0 rgba(0,0,0,0.06)",
-        btn: "0 2px 12px 0 rgba(125, 211, 252, 0.25)",
-        "btn-mint": "0 2px 12px 0 rgba(110, 231, 183, 0.3)",
+        card: "var(--shadow-panel)",
+        "card-hover": "var(--shadow-panel-hover)",
+        btn: "var(--shadow-action)",
+        "btn-mint": "var(--shadow-action-mint)",
+        panel: "var(--shadow-panel)",
       },
 
       // ─── Spacing extras ──────────────────────────────────────────────────
       spacing: {
+        page: "var(--space-page)",
+        section: "var(--space-section)",
+        card: "var(--space-card)",
+        control: "var(--space-control)",
         "touch": "44px",   // minimum touch target
         "18": "4.5rem",
         "22": "5.5rem",

@@ -37,7 +37,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
     <div
       id="app-shell"
       className="min-h-screen bg-page flex flex-col"
-      style={{ backgroundColor: "#F8F7FF" }}
+      style={{ backgroundColor: "var(--color-page-bg)" }}
     >
       {/* Skip-to-content link for screen readers */}
       <a

@@ -11,11 +11,14 @@ import { BuildAWordGame }    from "@/components/games/phonics/BuildAWordGame";
 import { MissingLetterGame } from "@/components/games/phonics/MissingLetterGame";
 import { GameComplete, type NewBadge } from "@/components/games/phonics/GameComplete";
 import { calculateXP }       from "@/lib/gamification";
-import { Volume2, ArrowLeft } from "lucide-react";
+import { Volume2, ArrowLeft, Check, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/Button";
+import { PageContainer } from "@/components/ui/PageContainer";
+import { Surface } from "@/components/ui/Surface";
 
 // Sequential order of the 3 mini-games within this section
 const GAME_SEQUENCE = ["sound-match", "build-word", "missing-letter"] as const;
@@ -139,160 +142,164 @@ export default function PhonicsAdventurePage() {
   const currentGame = GAME_SEQUENCE[gameIndex];
 
   return (
-    <div className="min-h-screen bg-page px-4 py-6 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="mx-auto mb-6 flex w-full max-w-6xl items-center gap-3">
-        <Link href="/dashboard/student" className="p-2 rounded-full bg-lavender-pastel border border-lavender-accent">
-          <ArrowLeft size={20} className="text-indigo-700" />
-        </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-3xl">🔤</span>
-          <div>
-            <h1 className="text-xl font-bold text-indigo-900 leading-tight">Phonics Adventure</h1>
-            <p className="text-base text-indigo-500">Let&apos;s learn sounds together!</p>
+    <div className="min-h-screen bg-surface-warm text-ink">
+      <header className="border-b border-border-subtle/80 bg-surface/90">
+        <PageContainer className="flex min-h-16 items-center gap-3 py-3">
+          <Link
+            href="/dashboard/student"
+            aria-label="Back to student dashboard"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-border-subtle bg-surface-soft text-indigo-800 transition-colors hover:bg-lavender-pastel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+          >
+            <ArrowLeft size={20} aria-hidden="true" />
+          </Link>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-pastel text-2xl" aria-hidden="true">🔤</span>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-indigo-950 sm:text-2xl">Phonics Adventure</h1>
+            <p className="text-sm leading-relaxed text-muted sm:text-base">Let&apos;s learn sounds together!</p>
           </div>
-        </div>
-        <button
-          onClick={() => speak("Welcome to Phonics Adventure! Complete all three games to finish the adventure.")}
-          className="ml-auto p-2 rounded-full bg-sunshine-pastel border border-sunshine-accent"
-          aria-label="Read instructions"
-        >
-          <Volume2 size={20} className="text-amber-600" />
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => speak("Welcome to Phonics Adventure! Complete all three games to finish the adventure.")}
+            className="ml-auto inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-sunshine-accent/60 bg-sunshine-pastel text-amber-800 transition-colors hover:bg-sunshine-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+            aria-label="Read instructions"
+          >
+            <Volume2 size={20} aria-hidden="true" />
+          </button>
+        </PageContainer>
+      </header>
 
-      {/* Sequential progress indicator — shown during play and between games */}
-      {phase !== "complete" && (
-        <div className="mx-auto mb-5 flex w-full max-w-6xl items-center gap-2">
-          {GAME_SEQUENCE.map((g, i) => {
-            const done    = i < gameIndex;
-            const active  = i === gameIndex;
-            return (
-              <div key={g} className="flex-1 flex flex-col items-center gap-1">
-                <div className={`w-full h-2 rounded-full transition-all ${
-                  done   ? "bg-mint-accent" :
-                  active ? "bg-lavender-accent" :
-                           "bg-lavender-pastel"
-                }`} />
-                <span className={`text-[11px] font-semibold ${
-                  done   ? "text-mint-accent" :
-                  active ? "text-lavender-accent" :
-                           "text-indigo-300"
-                }`}>
-                  {GAME_META[g].emoji} {GAME_META[g].title}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <PageContainer className="py-6 sm:py-8">
+        {phase !== "complete" && (
+          <nav className="mb-5" aria-label="Adventure progress">
+            <ol className="grid grid-cols-3 gap-2 sm:gap-3">
+              {GAME_SEQUENCE.map((game, index) => {
+                const done = index < gameIndex;
+                const active = index === gameIndex;
+                return (
+                  <li key={game} aria-current={active ? "step" : undefined}>
+                    <div className={`flex min-h-12 items-center justify-center gap-2 rounded-control border px-2 py-2 text-center text-xs font-semibold leading-tight tracking-normal sm:text-sm ${
+                      done
+                        ? "border-mint-accent/50 bg-mint-pastel text-indigo-900"
+                        : active
+                          ? "border-lavender-accent bg-lavender-pastel text-indigo-950"
+                          : "border-border-subtle bg-surface text-muted"
+                    }`}>
+                      {done ? <Check size={16} aria-hidden="true" /> : <span className="text-base" aria-hidden="true">{GAME_META[game].emoji}</span>}
+                      <span className="hidden sm:inline">{GAME_META[game].title}</span>
+                      <span className="sm:hidden">{index + 1} / {GAME_SEQUENCE.length}</span>
+                    </div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-soft" aria-hidden="true">
+                      <div className={`h-full rounded-full ${done ? "w-full bg-mint-accent" : active ? "w-2/3 bg-lavender-accent" : "w-0"}`} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        )}
 
-      {/* Stats bar — visible while playing */}
-      {phase === "playing" && (
-        <div className="mx-auto mb-4 flex w-full max-w-5xl gap-3">
-          <div className="flex-1 rounded-xl bg-mint-pastel px-4 py-2 text-center">
-            <p className="text-[11px] text-mint-accent font-semibold">Score</p>
-            <p className="text-lg font-bold text-indigo-900">{session.score}</p>
+        {phase === "playing" && (
+          <div className="mx-auto mb-5 grid w-full max-w-4xl grid-cols-2 gap-3 sm:gap-4" aria-label="Round results">
+            <Surface padding="sm" className="text-center">
+              <p className="text-xs font-semibold text-muted">Score</p>
+              <p className="text-xl font-bold text-indigo-950" aria-live="polite">{session.score}</p>
+            </Surface>
+            <Surface padding="sm" className="text-center">
+              <p className="text-xs font-semibold text-muted">Accuracy</p>
+              <p className="text-xl font-bold text-indigo-950" aria-live="polite">{session.accuracy}%</p>
+            </Surface>
           </div>
-          <div className="flex-1 rounded-xl bg-lavender-pastel px-4 py-2 text-center">
-            <p className="text-[11px] text-lavender-accent font-semibold">Accuracy</p>
-            <p className="text-lg font-bold text-indigo-900">{session.accuracy}%</p>
-          </div>
+        )}
+
+        <div className="mx-auto w-full max-w-4xl">
+          <AnimatePresence mode="wait">
+            {phase === "playing" && peekLoading && (
+              <motion.div
+                key="peek-loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex min-h-64 flex-col items-center justify-center gap-4"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="text-5xl" aria-hidden="true">🌟</span>
+                <p className="text-base font-semibold text-indigo-900">Loading your adventure...</p>
+                <LoaderCircle size={22} className="animate-spin text-indigo-700 motion-reduce:animate-none" aria-hidden="true" />
+              </motion.div>
+            )}
+
+            {phase === "playing" && !peekLoading && currentGame === "sound-match" && (
+              <motion.div key={`sm-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <SoundMatchGame words={activeLevel.words} onAnswer={recordAnswer} onRoundComplete={handleMiniGameComplete} />
+              </motion.div>
+            )}
+
+            {phase === "playing" && !peekLoading && currentGame === "build-word" && (
+              <motion.div key={`bw-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <BuildAWordGame words={activeLevel.words} onAnswer={recordAnswer} onRoundComplete={handleMiniGameComplete} />
+              </motion.div>
+            )}
+
+            {phase === "playing" && !peekLoading && currentGame === "missing-letter" && (
+              <motion.div key={`ml-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <MissingLetterGame
+                  words={activeLevel.words}
+                  confusionPairs={activeLevel.confusionPairs}
+                  onAnswer={recordAnswer}
+                  onRoundComplete={handleMiniGameComplete}
+                />
+              </motion.div>
+            )}
+
+            {phase === "between" && (
+              <motion.div
+                key="between"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mx-auto w-full max-w-2xl"
+              >
+                <Surface padding="lg" className="flex flex-col items-center gap-5 text-center">
+                  <span className="text-5xl" aria-hidden="true">🌟</span>
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-indigo-950">
+                      {GAME_META[currentGame].title} complete!
+                    </h2>
+                    <p className="mt-2 text-base leading-relaxed text-muted">
+                      Game {gameIndex + 1} of {GAME_SEQUENCE.length} done. Ready for the next one?
+                    </p>
+                  </div>
+                  <div className="flex w-full max-w-sm items-center gap-4 rounded-panel border border-lavender-accent/40 bg-lavender-pastel p-4 text-left">
+                    <span className="text-4xl" aria-hidden="true">{GAME_META[GAME_SEQUENCE[gameIndex + 1]].emoji}</span>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">Up next</p>
+                      <p className="text-lg font-bold text-indigo-950">{GAME_META[GAME_SEQUENCE[gameIndex + 1]].title}</p>
+                    </div>
+                  </div>
+                  <Button size="lg" className="w-full max-w-sm" onClick={goToNextGame}>
+                    Next Game <span aria-hidden="true">→</span>
+                  </Button>
+                </Surface>
+              </motion.div>
+            )}
+
+            {phase === "complete" && (
+              <motion.div key="complete" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <GameComplete
+                  score={session.score}
+                  accuracy={session.accuracy}
+                  xpEarned={xp}
+                  topConfusions={topConfusions}
+                  aiMessage={aiMessage}
+                  newBadges={newBadges}
+                  nextLevelReady={nextLevelReady}
+                  onPlayAgain={restartSequence}
+                  onGoHome={() => router.push("/dashboard/student")}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
-
-      {/* Main content */}
-      <div className="mx-auto w-full max-w-5xl">
-        <AnimatePresence mode="wait">
-
-          {/* ── Brief loading gate — waits for peek before mounting mini-games ── */}
-          {phase === "playing" && peekLoading && (
-            <motion.div key="peek-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="flex flex-col items-center gap-4 py-16">
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="text-5xl">🌟</motion.div>
-              <p className="text-base text-indigo-400">Loading your adventure...</p>
-            </motion.div>
-          )}
-
-          {/* ── Active mini-game ─────────────────────────────────────────── */}
-          {phase === "playing" && !peekLoading && currentGame === "sound-match" && (
-            <motion.div key={`sm-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <SoundMatchGame
-                words={activeLevel.words}
-                onAnswer={recordAnswer}
-                onRoundComplete={handleMiniGameComplete}
-              />
-            </motion.div>
-          )}
-
-          {phase === "playing" && !peekLoading && currentGame === "build-word" && (
-            <motion.div key={`bw-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <BuildAWordGame
-                words={activeLevel.words}
-                onAnswer={recordAnswer}
-                onRoundComplete={handleMiniGameComplete}
-              />
-            </motion.div>
-          )}
-
-          {phase === "playing" && !peekLoading && currentGame === "missing-letter" && (
-            <motion.div key={`ml-${roundKey}-${levelSource}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <MissingLetterGame
-                words={activeLevel.words}
-                confusionPairs={activeLevel.confusionPairs}
-                onAnswer={recordAnswer}
-                onRoundComplete={handleMiniGameComplete}
-              />
-            </motion.div>
-          )}
-
-          {/* ── Between games — "Next Game" prompt ──────────────────────── */}
-          {phase === "between" && (
-            <motion.div key="between" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-              className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 bg-white rounded-card p-8 shadow-card border border-mint-accent/20 text-center">
-              <span className="text-5xl">🌟</span>
-              <h2 className="text-2xl font-bold text-indigo-900">
-                {GAME_META[currentGame].title} Complete!
-              </h2>
-              <p className="text-base text-indigo-600">
-                Game {gameIndex + 1} of {GAME_SEQUENCE.length} done. Ready for the next one?
-              </p>
-              {/* Next game preview */}
-              <div className="flex items-center gap-3 bg-lavender-pastel rounded-xl px-6 py-4 border border-lavender-accent/40">
-                <span className="text-4xl">{GAME_META[GAME_SEQUENCE[gameIndex + 1]].emoji}</span>
-                <div className="text-left">
-                  <p className="text-[11px] text-lavender-accent font-semibold uppercase tracking-wide">Up next</p>
-                  <p className="text-lg font-bold text-indigo-900">{GAME_META[GAME_SEQUENCE[gameIndex + 1]].title}</p>
-                </div>
-              </div>
-              <button
-                onClick={goToNextGame}
-                className="w-full py-4 rounded-button bg-lavender-accent text-white font-bold text-xl shadow-btn">
-                Next Game →
-              </button>
-            </motion.div>
-          )}
-
-          {/* ── All 3 complete ──────────────────────────────────────────── */}
-          {phase === "complete" && (
-            <motion.div key="complete" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <GameComplete
-                score={session.score}
-                accuracy={session.accuracy}
-                xpEarned={xp}
-                topConfusions={topConfusions}
-                aiMessage={aiMessage}
-                newBadges={newBadges}
-                nextLevelReady={nextLevelReady}
-                onPlayAgain={restartSequence}
-                onGoHome={() => router.push("/dashboard/student")}
-              />
-            </motion.div>
-          )}
-
-        </AnimatePresence>
-      </div>
+      </PageContainer>
     </div>
   );
 }

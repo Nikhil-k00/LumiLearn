@@ -1,6 +1,8 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Surface } from "@/components/ui/Surface";
 
 export interface NewBadge {
   badgeId:     string;
@@ -39,108 +41,105 @@ export function GameComplete({ score, accuracy, xpEarned, topConfusions, aiMessa
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.85 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex flex-col items-center gap-6 text-center px-6 py-10 rounded-card
-                 bg-white shadow-card border border-lavender-accent/20 max-w-sm mx-auto"
+      className="mx-auto w-full max-w-2xl"
     >
-      <h2 className="text-2xl font-bold text-indigo-900">{message.title}</h2>
-
-      {/* Stars */}
-      <div className="flex gap-3">
-        {[1, 2, 3].map((n) => (
-          <motion.div
-            key={n}
-            initial={{ scale: 0, rotate: -20 }}
-            animate={{ scale: n <= stars ? 1 : 0.5, rotate: 0 }}
-            transition={{ delay: n * 0.15 }}
-          >
-            <Star
-              size={44}
-              className={n <= stars ? "text-sunshine-accent fill-sunshine-accent" : "text-indigo-200 fill-indigo-100"}
-            />
-          </motion.div>
-        ))}
-      </div>
-
-      <p className="text-game text-indigo-600">{message.body}</p>
-
-      {/* ── New badges earned this session ──────────────────────── */}
-      <AnimatePresence>
-        {newBadges.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full rounded-2xl bg-sunshine-pastel border-2 border-sunshine-accent/60 p-4"
-          >
-            <p className="text-[13px] font-bold text-amber-700 uppercase tracking-wide mb-3">
-              🏅 Badge{newBadges.length > 1 ? "s" : ""} Unlocked!
-            </p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {newBadges.map((b, i) => (
-                <motion.div
-                  key={b.badgeId}
-                  initial={{ scale: 0, rotate: -10 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: i * 0.12, type: "spring", stiffness: 260 }}
-                  className="flex flex-col items-center gap-1 bg-white rounded-xl px-4 py-3
-                             border border-sunshine-accent/40 shadow-sm min-w-[80px]"
-                >
-                  <span className="text-4xl">{b.emoji}</span>
-                  <span className="text-[12px] font-bold text-indigo-800 text-center leading-tight">{b.name}</span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {aiMessage && (
-        <p className="text-base font-medium text-indigo-700 bg-sky-pastel p-3 rounded-xl border border-sky-accent/40 w-full text-left">
-          🤖 {aiMessage}
-        </p>
-      )}
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 w-full">
-        <div className="rounded-xl bg-mint-pastel p-3">
-          <p className="text-[11px] text-mint-accent font-semibold uppercase tracking-wide">Score</p>
-          <p className="text-2xl font-bold text-indigo-900">{score}</p>
+      <Surface padding="lg" className="flex flex-col items-center gap-5 text-center sm:gap-6">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-700">Adventure complete</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-indigo-950">{message.title}</h2>
         </div>
-        <div className="rounded-xl bg-lavender-pastel p-3">
-          <p className="text-[11px] text-lavender-accent font-semibold uppercase tracking-wide">+XP</p>
-          <p className="text-2xl font-bold text-indigo-900">{xpEarned}</p>
-        </div>
-      </div>
 
-      {/* Weak areas (only shown if any) */}
-      {topConfusions.length > 0 && (
-        <div className="w-full rounded-xl bg-sunshine-pastel p-3 text-left">
-          <p className="text-[12px] font-semibold text-indigo-700 mb-1">Let&apos;s practice a bit more:</p>
-          <p className="text-base text-indigo-800">
-            Letters {topConfusions.join(", ")} — try listening carefully to each sound!
+        {/* Stars */}
+        <div className="flex gap-3" role="img" aria-label={`${stars} out of 3 stars`}>
+          {[1, 2, 3].map((n) => (
+            <motion.div
+              key={n}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: n * 0.08 }}
+              aria-hidden="true"
+            >
+              <Star
+                size={40}
+                className={n <= stars ? "fill-sunshine-accent text-amber-700" : "fill-indigo-100 text-indigo-300"}
+              />
+            </motion.div>
+          ))}
+        </div>
+
+        <p className="max-w-xl text-base leading-relaxed text-muted" role="status" aria-live="polite">{message.body}</p>
+
+        {/* ── New badges earned this session ──────────────────────── */}
+        <AnimatePresence>
+          {newBadges.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full rounded-panel border border-sunshine-accent/60 bg-sunshine-pastel/70 p-4"
+            >
+              <p className="mb-3 text-sm font-bold uppercase tracking-wide text-amber-900">
+                🏅 Badge{newBadges.length > 1 ? "s" : ""} unlocked!
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {newBadges.map((badge) => (
+                  <div
+                    key={badge.badgeId}
+                    className="flex min-w-24 flex-col items-center gap-2 rounded-control border border-sunshine-accent/50 bg-white px-4 py-3"
+                  >
+                    <span className="text-4xl" aria-hidden="true">{badge.emoji}</span>
+                    <span className="text-sm font-bold leading-tight text-indigo-900">{badge.name}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {aiMessage && (
+          <p className="w-full rounded-control border border-sky-accent/50 bg-sky-pastel p-4 text-left text-base leading-relaxed text-indigo-900" role="status" aria-live="polite">
+            <span aria-hidden="true">🤖 </span>{aiMessage}
           </p>
-        </div>
-      )}
+        )}
 
-      <div className="flex gap-3 w-full">
-        <button
-          onClick={() => { if (nextLevelReady) onPlayAgain(); }}
-          disabled={!nextLevelReady}
-          className={`flex-1 py-3 rounded-button font-semibold text-lg transition-all
-            ${nextLevelReady
-              ? "bg-mint-accent text-white shadow-btn-mint"
-              : "bg-mint-pastel text-mint-accent border-2 border-mint-accent cursor-wait opacity-80"}`}
-        >
-          {nextLevelReady ? "Play Again" : "⏳ Loading next level..."}
-        </button>
-        <button
-          onClick={onGoHome}
-          className="flex-1 py-3 rounded-button bg-lavender-pastel text-indigo-800 font-semibold text-lg border border-lavender-accent"
-        >
-          Home
-        </button>
-      </div>
+        {/* Stats */}
+        <div className="grid w-full grid-cols-2 gap-3">
+          <div className="rounded-control border border-mint-accent/50 bg-mint-pastel p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-800">Score</p>
+            <p className="mt-1 text-2xl font-bold text-indigo-950">{score}</p>
+          </div>
+          <div className="rounded-control border border-lavender-accent/50 bg-lavender-pastel p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-800">XP earned</p>
+            <p className="mt-1 text-2xl font-bold text-indigo-950">+{xpEarned}</p>
+          </div>
+        </div>
+
+        {/* Weak areas (only shown if any) */}
+        {topConfusions.length > 0 && (
+          <div className="w-full rounded-control border border-sunshine-accent/60 bg-sunshine-pastel/70 p-4 text-left">
+            <p className="text-sm font-semibold text-indigo-950">Let&apos;s practice a bit more:</p>
+            <p className="mt-1 text-base leading-relaxed text-indigo-900">
+              Letters {topConfusions.join(", ")} — try listening carefully to each sound!
+            </p>
+          </div>
+        )}
+
+        <div className="flex w-full flex-col gap-3 sm:flex-row">
+          <Button
+            variant="primary"
+            size="lg"
+            className="flex-1"
+            onClick={onPlayAgain}
+            disabled={!nextLevelReady}
+          >
+            {nextLevelReady ? "Play Again" : "Loading next level..."}
+          </Button>
+          <Button variant="secondary" size="lg" className="flex-1" onClick={onGoHome}>
+            Home
+          </Button>
+        </div>
+      </Surface>
     </motion.div>
   );
 }

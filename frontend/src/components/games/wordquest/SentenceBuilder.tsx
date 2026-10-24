@@ -93,58 +93,88 @@ export function SentenceBuilder({ sentences, onAnswer, onRoundComplete, onTTSUse
   if (!current) return null;
 
   return (
-    <div className="flex flex-col items-center gap-5">
-      <div className="text-5xl">{current.emoji}</div>
-      <p className="text-game text-indigo-700 font-medium text-center">
-        Build the sentence! Tap words in order.
-      </p>
+    <section className="flex w-full flex-col items-center gap-5 sm:gap-6" aria-labelledby="sentence-builder-title">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-sunshine-accent/60 bg-sunshine-pastel text-4xl shadow-panel" aria-hidden="true">
+        {current.emoji}
+      </div>
+      <div className="text-center">
+        <h2 id="sentence-builder-title" className="text-xl font-bold tracking-tight text-indigo-950 sm:text-2xl">
+          Build the sentence
+        </h2>
+        <p className="mt-1 text-base leading-relaxed text-muted">Tap each word in the order that makes sense.</p>
+      </div>
 
-      {/* Assembly area */}
-      <div className="min-h-[100px] w-full flex flex-wrap gap-4 items-center justify-center
-                      bg-white/70 rounded-card px-6 py-6 shadow-card border border-lavender-accent/30">
+      <div
+        className="flex min-h-28 w-full flex-wrap items-center justify-center gap-3 rounded-panel border border-border-subtle bg-surface-soft/70 px-4 py-5 sm:gap-4 sm:px-6"
+        aria-label="Your sentence"
+        aria-live="polite"
+      >
         {built.length === 0
-          ? <p className="text-indigo-300 text-xl">Tap words below to build the sentence...</p>
+          ? <p className="text-center text-base leading-relaxed text-muted">Your sentence will appear here.</p>
           : built.map((w, i) => (
-            <motion.button key={`${w}-${i}`} initial={{ scale: 0 }} animate={{ scale: 1 }}
+            <motion.button
+              key={`${w}-${i}`}
+              type="button"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
               onClick={() => removeWord(i)}
-              className="px-6 py-4 rounded-2xl bg-lavender-pastel border-2 border-lavender-accent
-                         text-3xl font-semibold text-indigo-900 shadow-sm">
-              {w}
+              disabled={feedback !== "idle"}
+              aria-label={`Remove ${w} from your sentence`}
+              className="rounded-control border border-lavender-accent bg-lavender-pastel px-4 py-3 text-xl font-semibold text-indigo-950 shadow-sm transition-colors hover:bg-lavender-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 sm:text-2xl"
+            >
+              {w}<span className="sr-only">, remove from sentence</span>
             </motion.button>
           ))
         }
       </div>
 
-      {/* Word pool */}
-      <div className="flex flex-wrap gap-4 justify-center mt-2">
+      <div className="flex w-full flex-wrap justify-center gap-3 sm:gap-4" aria-label="Available words">
         {pool.map((w, i) => (
-          <motion.button key={`pool-${w}-${i}`} whileTap={{ scale: 0.9 }}
+          <motion.button
+            key={`pool-${w}-${i}`}
+            type="button"
+            whileTap={{ scale: 0.97 }}
             onClick={() => pickWord(w, i)}
-            className="px-8 py-6 rounded-2xl bg-sky-pastel border-4 border-sky-accent
-                       text-4xl font-bold text-indigo-900 shadow-card hover:shadow-card-hover">
+            disabled={feedback !== "idle"}
+            className="min-h-16 rounded-panel border-2 border-sky-accent bg-sky-pastel px-5 py-4 text-xl font-bold text-indigo-950 shadow-panel transition-colors hover:bg-sky-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 sm:text-2xl"
+          >
             {w}
           </motion.button>
         ))}
       </div>
 
-      {/* Check + TTS */}
-      <div className="flex gap-3">
+      <div className="flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
         {built.length === current.words.length && feedback === "idle" && (
-          <button onClick={checkSentence}
-            className="flex items-center gap-2 px-6 py-3 rounded-button bg-mint-accent text-white font-semibold shadow-btn-mint">
-            <CheckCircle size={18} /> Check
+          <button
+            type="button"
+            onClick={checkSentence}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-indigo-700 px-6 py-3 text-base font-semibold text-white shadow-action transition-colors hover:bg-indigo-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+          >
+            <CheckCircle size={18} aria-hidden="true" /> Check sentence
           </button>
         )}
-        <button onClick={() => { speak(current.words.join(" ")); onTTSUse(); }}
-          className="flex items-center gap-2 px-4 py-3 rounded-button bg-sunshine-pastel border border-sunshine-accent text-indigo-800">
-          <Volume2 size={16} /> Hear sentence
+        <button
+          type="button"
+          onClick={() => { speak(current.words.join(" ")); onTTSUse(); }}
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control border border-sunshine-accent/70 bg-sunshine-pastel px-5 py-3 text-base font-semibold text-indigo-950 transition-colors hover:bg-sunshine-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+        >
+          <Volume2 size={17} aria-hidden="true" /> Hear sentence
         </button>
       </div>
 
-      {feedback === "correct" && <p className="text-2xl font-bold text-mint-accent">🌟 Perfect sentence!</p>}
-      {feedback === "wrong"   && <p className="text-xl text-peach-accent font-semibold">💪 Try again!</p>}
+      {feedback !== "idle" && (
+        <p
+          className={`text-base font-semibold ${feedback === "correct" ? "text-success" : "text-error"}`}
+          role="status"
+          aria-live="polite"
+        >
+          {feedback === "correct" ? "Perfect sentence! You got it." : "Not quite. Try rearranging the words."}
+        </p>
+      )}
 
-      <p className="text-base text-indigo-400">{index + 1} / {queue.length}</p>
-    </div>
+      <p className="text-sm font-semibold tabular-nums text-muted" aria-label={`Sentence ${index + 1} of ${queue.length}`}>
+        {index + 1} of {queue.length}
+      </p>
+    </section>
   );
 }

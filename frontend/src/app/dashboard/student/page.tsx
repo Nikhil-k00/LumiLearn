@@ -1,12 +1,16 @@
 "use client";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTTS } from "@/hooks/useTTS";
-import { useDashboardData } from "@/hooks/useDashboardData";
-import { Volume2, Flame, LogOut, Zap } from "lucide-react";
+import { useDashboardData, type ProfileData } from "@/hooks/useDashboardData";
+import { Volume2, Flame, LogOut, Zap, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { getLevelFromXP, getXPForNextLevel } from "@/lib/gamification";
+import { Button } from "@/components/ui/Button";
+import { PageContainer } from "@/components/ui/PageContainer";
+import { Surface } from "@/components/ui/Surface";
 
 const GAMES = [
   {
@@ -14,53 +18,53 @@ const GAMES = [
     emoji: "🔤",
     title: "Phonics Adventure",
     desc: "Master letter sounds & beat b/d confusion!",
-    color: "from-sky-pastel to-sky-accent/20",
-    border: "border-sky-accent/40",
     badge: "Phonics",
-    badgeColor: "bg-sky-pastel text-sky-700",
+    badgeClass: "bg-sky-pastel text-sky-700",
+    accentClass: "border-sky-accent/40 bg-sky-pastel/50",
   },
   {
     href: "/games/word-quest",
     emoji: "📖",
     title: "Word Quest",
     desc: "Read stories, match words, build sentences!",
-    color: "from-mint-pastel to-mint-accent/20",
-    border: "border-mint-accent/40",
     badge: "Reading",
-    badgeColor: "bg-mint-pastel text-green-700",
+    badgeClass: "bg-mint-pastel text-green-800",
+    accentClass: "border-mint-accent/40 bg-mint-pastel/50",
   },
   {
     href: "/games/memory-challenge",
     emoji: "🧠",
     title: "Memory Challenge",
     desc: "Sound sequences, rhymes & memory power!",
-    color: "from-lavender-pastel to-lavender-accent/20",
-    border: "border-lavender-accent/40",
     badge: "Memory",
-    badgeColor: "bg-lavender-pastel text-violet-700",
+    badgeClass: "bg-lavender-pastel text-violet-800",
+    accentClass: "border-lavender-accent/50 bg-lavender-pastel/60",
   },
 ];
 
-const STAT_COLORS = [
+const STAT_COLORS: Array<{
+  key: keyof Pick<ProfileData, "phonicsScore" | "readingScore" | "memoryScore">;
+  label: string;
+  emoji: string;
+  ring: string;
+  bg: string;
+}> = [
   { key: "phonicsScore", label: "Phonics", emoji: "🔤", ring: "#7DD3FC", bg: "bg-sky-pastel" },
   { key: "readingScore", label: "Reading", emoji: "📖", ring: "#6EE7B7", bg: "bg-mint-pastel" },
-  { key: "memoryScore", label: "Memory", emoji: "🧠", ring: "#C4B5FD", bg: "bg-lavender-pastel" },
+  { key: "memoryScore", label: "Memory", emoji: "🧠", ring: "#60A5FA", bg: "bg-lavender-pastel" },
 ];
-
-/* Animated background stars */
-const BG_STARS = Array.from({ length: 18 }, (_, i) => ({
-  x: `${(i * 37 + 5) % 100}%`,
-  y: `${(i * 53 + 8) % 100}%`,
-  delay: i * 0.15,
-  emoji: ["⭐", "✨", "🌟", "💫"][i % 4],
-  size: i % 3 === 0 ? "text-2xl" : "text-base",
-}));
 
 export default function StudentDashboard() {
   const { user, logout, loading: authLoading } = useAuth();
   const { speak } = useTTS();
   const router = useRouter();
-  const { data, loading } = useDashboardData(user?.id);
+  const { data, loading, error, refetch } = useDashboardData(user?.id);
+  const [greeting, setGreeting] = useState("Hello");
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
+  }, []);
 
   // Auth guard — redirect unauthenticated users to login
   if (!authLoading && !user) {
@@ -68,285 +72,330 @@ export default function StudentDashboard() {
     return null;
   }
 
-  if (loading || authLoading) return (
-    <div className="min-h-screen bg-page flex items-center justify-center">
-      <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity }} className="text-7xl">🌟</motion.div>
-    </div>
-  );
-  if (!data) return null;
+  if (loading || authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-warm px-4">
+        <div className="flex flex-col items-center gap-4" role="status" aria-live="polite">
+          <span className="text-6xl" aria-hidden="true">🌟</span>
+          <p className="text-base font-semibold text-indigo-900">Getting your learning space ready...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-surface-warm text-ink">
+        <PageContainer className="flex min-h-screen flex-col">
+          <header className="flex items-center gap-3 border-b border-border-subtle/80 py-4 sm:py-5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lavender-pastel text-xl shadow-panel" aria-hidden="true">✦</span>
+            <span className="text-xl font-bold tracking-tight text-indigo-950">LumiLearn</span>
+          </header>
+          <section className="flex flex-1 items-center justify-center py-12" aria-labelledby="dashboard-error-title">
+            <Surface className="w-full max-w-xl text-center" padding="lg">
+              <span className="text-5xl" aria-hidden="true">🌤️</span>
+              <h1 id="dashboard-error-title" className="mt-4 text-2xl font-bold tracking-tight text-indigo-950">
+                We couldn&apos;t load your learning space
+              </h1>
+              <p className="mt-2 text-base leading-relaxed text-muted" role="alert">
+                {error ?? "Your dashboard data is not available right now. Please try again."}
+              </p>
+              <Button className="mt-6" onClick={() => void refetch()}>
+                <RefreshCw size={18} aria-hidden="true" /> Try again
+              </Button>
+            </Surface>
+          </section>
+        </PageContainer>
+      </div>
+    );
+  }
 
   const { student, profile, recentAchievements } = data;
   const level = getLevelFromXP(student.xp);
   const nextXP = getXPForNextLevel(level);
   const xpPct = Math.min(100, Math.round((student.xp / nextXP) * 100));
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="min-h-screen bg-page relative overflow-hidden">
+    <div className="min-h-screen bg-surface-warm text-ink">
+      <header className="border-b border-border-subtle/80 bg-surface/90">
+        <PageContainer className="flex min-h-16 flex-wrap items-center justify-between gap-x-5 gap-y-3 py-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lavender-pastel text-xl shadow-panel" aria-hidden="true">✦</span>
+            <span className="text-xl font-bold tracking-tight text-indigo-950">LumiLearn</span>
+          </div>
 
-      {/* ── Animated background ──────────────────────────────────────── */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {BG_STARS.map((s, i) => (
-          <motion.div
-            key={i}
-            className={`absolute ${s.size} opacity-20 select-none`}
-            style={{ left: s.x, top: s.y }}
-            animate={{ y: [0, -16, 0], opacity: [0.15, 0.3, 0.15] }}
-            transition={{ duration: 4 + i * 0.3, delay: s.delay, repeat: Infinity, ease: "easeInOut" }}
-          >
-            {s.emoji}
-          </motion.div>
-        ))}
-      </div>
+          <div className="hidden items-center gap-5 md:flex" aria-label="Your rewards">
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-800">
+              <Flame size={17} aria-hidden="true" className="text-orange-600" /> {student.streak} day streak
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-800">
+              <Zap size={17} aria-hidden="true" className="text-indigo-700" /> Level {level}
+            </span>
+            <span className="text-sm font-semibold text-amber-800">🪙 {student.coins} coins</span>
+          </div>
 
-      {/* ── TOP NAV BAR ──────────────────────────────────────────────── */}
-      <nav className="relative z-10 bg-white/80 backdrop-blur-sm border-b border-lavender-accent/20
-                      px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🌟</span>
-          <span className="text-[18px] font-bold text-indigo-900 tracking-tight">LumiLearn</span>
-        </div>
-        {/* Stats strip */}
-        <div className="hidden md:flex items-center gap-5">
-          <span className="flex items-center gap-1.5 text-[14px] text-orange-600 font-semibold">
-            <Flame size={16} className="text-orange-500" /> {student.streak} day streak
-          </span>
-          <span className="flex items-center gap-1.5 text-[14px] text-violet-700 font-semibold">
-            <Zap size={16} className="text-lavender-accent" /> Level {level}
-          </span>
-          <span className="text-[14px] text-amber-600 font-semibold">🪙 {student.coins} coins</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/student/parent-zone"
-            className="flex items-center gap-1.5 text-[13px] font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
-            👪 Parent Zone
-          </Link>
-          <button onClick={logout}
-            className="flex items-center gap-1.5 text-[13px] text-indigo-400 hover:text-indigo-700 transition-colors">
-            <LogOut size={15} /> Sign out
-          </button>
-        </div>
-      </nav>
-
-      {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
-      <div className="relative z-10 max-w-[1280px] mx-auto px-6 py-8">
-
-        {/* ── TOP ROW: Hero card + Stats ───────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-          {/* Hero welcome card — spans 2 cols */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-2 bg-gradient-to-br from-lavender-pastel via-sky-pastel to-mint-pastel
-                       rounded-card shadow-card border border-lavender-accent/20 p-6 flex items-center gap-6"
-          >
-            {/* Avatar */}
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="w-20 h-20 rounded-full bg-white/70 border-3 border-lavender-accent/50
-                         flex items-center justify-center text-5xl shadow-card flex-shrink-0"
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/dashboard/student/parent-zone"
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-control bg-surface-soft px-3 text-sm font-semibold text-indigo-800 transition-colors hover:bg-lavender-pastel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
             >
-              {student.avatarId}
-            </motion.div>
+              <span aria-hidden="true">👪</span><span>Parent Zone</span>
+            </Link>
+            <button
+              type="button"
+              onClick={logout}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-control px-2 text-sm font-semibold text-muted transition-colors hover:bg-surface-soft hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 sm:px-3"
+            >
+              <LogOut size={16} aria-hidden="true" /><span>Sign out</span>
+            </button>
+          </div>
+        </PageContainer>
+      </header>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-[26px] font-bold text-indigo-900 leading-tight">
-                  {greeting}, {student.name}! 👋
+      <PageContainer className="py-7 sm:py-9">
+        {error && (
+          <div className="mb-5 flex flex-col items-start justify-between gap-3 rounded-panel border border-peach-accent/60 bg-peach-pastel px-4 py-3 sm:flex-row sm:items-center">
+            <p className="text-sm font-medium leading-relaxed text-error-text" role="alert">
+              Your latest dashboard refresh did not finish. Showing the information already loaded.
+            </p>
+            <Button variant="secondary" size="sm" onClick={() => void refetch()}>
+              <RefreshCw size={16} aria-hidden="true" /> Refresh
+            </Button>
+          </div>
+        )}
+
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.65fr)]"
+          aria-labelledby="welcome-heading"
+        >
+          <Surface
+            padding="lg"
+            className="flex flex-col gap-5 bg-gradient-to-br from-lavender-pastel/70 via-surface to-mint-pastel/50 sm:flex-row sm:items-center sm:gap-6"
+          >
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-white bg-surface text-5xl shadow-panel sm:h-24 sm:w-24" aria-hidden="true">
+              {student.avatarId}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 id="welcome-heading" className="text-3xl font-bold leading-heading tracking-tight text-indigo-950 sm:text-4xl">
+                  {greeting}, {student.name}!
                 </h1>
-                <button onClick={() => speak(`${greeting} ${student.name}! Ready for your adventure today?`)}
-                  className="p-1.5 rounded-full bg-white/70 border border-lavender-accent/40 flex-shrink-0"
-                  style={{ minHeight: "unset", minWidth: "unset" }}>
-                  <Volume2 size={13} className="text-indigo-500" />
+                <button
+                  type="button"
+                  onClick={() => speak(`${greeting} ${student.name}! Ready for your adventure today?`)}
+                  aria-label="Hear your welcome"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-lavender-accent/50 bg-white text-indigo-700 transition-colors hover:bg-lavender-pastel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+                >
+                  <Volume2 size={18} aria-hidden="true" />
                 </button>
               </div>
-              <p className="text-[15px] text-indigo-600 mt-0.5">
-                Ready for today&apos;s adventure? Pick a game below!
+              <p className="mt-2 text-base leading-relaxed text-muted">
+                Ready for today&apos;s adventure? Choose a game to play and keep growing.
               </p>
 
-              {/* XP bar */}
-              <div className="mt-4">
-                <div className="flex justify-between text-[12px] text-indigo-500 mb-1">
-                  <span className="font-semibold">Level {level} → {level + 1}</span>
+              <div className="mt-5">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-indigo-900">
+                  <span className="font-semibold">Level {level} <span aria-hidden="true">→</span> {level + 1}</span>
                   <span>{student.xp} / {nextXP} XP</span>
                 </div>
-                <div className="h-3 bg-white/50 rounded-full overflow-hidden">
+                <div
+                  className="h-3 overflow-hidden rounded-full bg-white/80"
+                  role="progressbar"
+                  aria-label="Progress to next level"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={xpPct}
+                >
                   <motion.div
-                    initial={{ width: 0 }} animate={{ width: `${xpPct}%` }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-lavender-accent to-sky-accent rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${xpPct}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="h-full rounded-full bg-indigo-700"
                   />
                 </div>
               </div>
             </div>
-          </motion.div>
+          </Surface>
 
-          {/* Score cards column */}
-          <div className="flex flex-col gap-3">
-            {STAT_COLORS.map((s, i) => {
-              const score = profile ? (profile as any)[s.key] ?? 0 : 0;
+          <Surface padding="md" className="flex flex-col justify-center bg-sunshine-pastel/70">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-2xl" aria-hidden="true">🏆</span>
+              <h2 className="text-lg font-bold tracking-tight text-indigo-950">Your rewards</h2>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-control bg-white/80 px-2 py-3">
+                <p className="text-xs font-semibold text-muted">Streak</p>
+                <p className="mt-1 flex items-center justify-center gap-1 whitespace-nowrap text-base font-bold text-indigo-950">
+                  <span aria-hidden="true">🔥</span>{student.streak}
+                </p>
+              </div>
+              <div className="rounded-control bg-white/80 px-2 py-3">
+                <p className="text-xs font-semibold text-muted">Coins</p>
+                <p className="mt-1 flex items-center justify-center gap-1 whitespace-nowrap text-base font-bold text-indigo-950">
+                  <span aria-hidden="true">🪙</span>{student.coins}
+                </p>
+              </div>
+              <div className="rounded-control bg-white/80 px-2 py-3">
+                <p className="text-xs font-semibold text-muted">Level</p>
+                <p className="mt-1 flex items-center justify-center gap-1 whitespace-nowrap text-base font-bold text-indigo-950">
+                  <span aria-hidden="true">⭐</span>{level}
+                </p>
+              </div>
+            </div>
+          </Surface>
+        </motion.section>
+
+        <section className="mt-8 sm:mt-10" aria-labelledby="progress-heading">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-700">Your learning journey</p>
+              <h2 id="progress-heading" className="mt-1 text-2xl font-bold tracking-tight text-indigo-950">Skills in progress</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+            {STAT_COLORS.map((stat, index) => {
+              const score = profile?.[stat.key] ?? 0;
+              const boundedScore = Math.max(0, Math.min(100, score));
+              const circumference = 100.5;
               return (
                 <motion.div
-                  key={s.key}
-                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 + i * 0.08 }}
-                  className={`${s.bg} rounded-card shadow-card border border-white/60 px-5 py-3
-                              flex items-center gap-4`}
+                  key={stat.key}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * index, duration: 0.3 }}
                 >
-                  <span className="text-3xl">{s.emoji}</span>
-                  <div className="flex-1">
-                    <p className="text-[11px] font-semibold text-indigo-500 uppercase tracking-wide">{s.label}</p>
-                    <div className="flex items-end gap-1">
-                      <span className="text-[24px] font-bold text-indigo-900">{score}</span>
-                      <span className="text-[12px] text-indigo-400 mb-0.5">/100</span>
+                  <Surface padding="md" className={`flex h-full min-h-24 items-center gap-4 ${stat.bg}`}>
+                    <span className="text-3xl" aria-hidden="true">{stat.emoji}</span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-indigo-900">{stat.label}</h3>
+                      <p className="mt-1 flex items-baseline gap-1">
+                        <span className="text-3xl font-bold leading-none text-indigo-950">{score}</span>
+                        <span className="text-sm text-muted">/ 100</span>
+                      </p>
                     </div>
-                  </div>
-                  {/* Mini progress arc */}
-                  <div className="relative w-10 h-10">
-                    <svg viewBox="0 0 40 40" className="rotate-[-90deg]">
-                      <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="4" />
-                      <motion.circle
-                        cx="20" cy="20" r="16" fill="none"
-                        stroke={s.ring} strokeWidth="4" strokeLinecap="round"
-                        strokeDasharray={`${100.5}`}
-                        initial={{ strokeDashoffset: 100.5 }}
-                        animate={{ strokeDashoffset: 100.5 - (score / 100) * 100.5 }}
-                        transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 + i * 0.1 }}
-                      />
-                    </svg>
-                  </div>
+                    <div
+                      className="h-11 w-11 shrink-0"
+                      role="img"
+                      aria-label={`${stat.label} score ${score} out of 100`}
+                    >
+                      <svg viewBox="0 0 40 40" className="-rotate-90" aria-hidden="true">
+                        <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="4" />
+                        <circle
+                          cx="20"
+                          cy="20"
+                          r="16"
+                          fill="none"
+                          stroke={stat.ring}
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={circumference - (boundedScore / 100) * circumference}
+                        />
+                      </svg>
+                    </div>
+                  </Surface>
                 </motion.div>
               );
             })}
           </div>
-        </div>
+        </section>
 
-        {/* ── MIDDLE ROW: Game cards ───────────────────────────────── */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-[20px] font-bold text-indigo-900">🎮 Choose Your Adventure</h2>
-            <button onClick={() => speak("Choose a game to play!")}
-              className="p-1.5 rounded-full bg-lavender-pastel border border-lavender-accent/40"
-              style={{ minHeight: "unset", minWidth: "unset" }}>
-              <Volume2 size={12} className="text-lavender-accent" />
+        <section className="mt-8 sm:mt-10" aria-labelledby="games-heading">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-700">Pick up where you like</p>
+              <h2 id="games-heading" className="mt-1 text-2xl font-bold tracking-tight text-indigo-950">Choose your adventure</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => speak("Choose a game to play!")}
+              aria-label="Hear game instructions"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-lavender-accent/50 bg-lavender-pastel text-indigo-800 transition-colors hover:bg-lavender-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+            >
+              <Volume2 size={18} aria-hidden="true" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {GAMES.map((g, i) => (
-              <motion.div
-                key={g.href}
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {GAMES.map((game, index) => (
+              <motion.article
+                key={game.href}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.06 * index, duration: 0.3 }}
+                className="h-full"
               >
-                <Link href={g.href}
-                  className={`flex flex-col gap-4 p-6 rounded-card border-2 ${g.border}
-                              bg-gradient-to-br ${g.color} shadow-card hover:shadow-card-hover
-                              transition-shadow group block h-full`}>
-                  {/* Top row */}
-                  <div className="flex items-start justify-between">
-                    <motion.span
-                      className="text-5xl leading-none"
-                      animate={{ rotate: [0, 5, -5, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
-                    >
-                      {g.emoji}
-                    </motion.span>
-                    <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${g.badgeColor}`}>
-                      {g.badge}
-                    </span>
-                  </div>
-                  {/* Content */}
-                  <div className="flex-1">
-                    <h3 className="text-[18px] font-bold text-indigo-900">{g.title}</h3>
-                    <p className="text-[14px] text-indigo-600 mt-1 leading-snug">{g.desc}</p>
-                  </div>
-                  {/* Play button */}
-                  <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center gap-1.5">
-                      <button onClick={(e) => { e.preventDefault(); speak(g.desc); }}
-                        className="p-1.5 rounded-full bg-white/70"
-                        style={{ minHeight: "unset", minWidth: "unset" }}>
-                        <Volume2 size={12} className="text-indigo-400" />
-                      </button>
+                <Surface padding="none" className={`flex h-full flex-col ${game.accentClass}`}>
+                  <Link
+                    href={game.href}
+                    className="group flex min-h-44 flex-1 flex-col rounded-panel p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset sm:p-6"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-5xl leading-none" aria-hidden="true">{game.emoji}</span>
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${game.badgeClass}`}>{game.badge}</span>
                     </div>
-                    <span className="flex items-center gap-1.5 text-[14px] font-bold text-indigo-700
-                                     group-hover:gap-2.5 transition-all">
-                      Play now <span className="text-xl">▶️</span>
+                    <div className="mt-5 flex-1">
+                      <h3 className="text-xl font-bold tracking-tight text-indigo-950">{game.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted">{game.desc}</p>
+                    </div>
+                    <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-indigo-800 transition-transform group-hover:translate-x-1">
+                      Play now <span aria-hidden="true">→</span>
                     </span>
+                  </Link>
+                  <div className="flex justify-end px-5 pb-4 sm:px-6">
+                    <button
+                      type="button"
+                      onClick={() => speak(game.desc)}
+                      aria-label={`Hear ${game.title} description`}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-indigo-800 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+                    >
+                      <Volume2 size={17} aria-hidden="true" />
+                    </button>
                   </div>
-                </Link>
-              </motion.div>
+                </Surface>
+              </motion.article>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* ── BOTTOM ROW: Achievements + Mission ──────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Stats card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="bg-sunshine-pastel rounded-card border-2 border-sunshine-accent/60 p-6 shadow-card"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <motion.span
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-3xl"
-              >🏆</motion.span>
-              <h3 className="text-[16px] font-bold text-amber-800">Your Progress</h3>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex-1 bg-white/60 rounded-xl px-4 py-3 text-center">
-                <p className="text-[11px] text-amber-600 font-semibold uppercase">Streak</p>
-                <p className="text-[22px] font-bold text-indigo-900">🔥 {student.streak}</p>
-              </div>
-              <div className="flex-1 bg-white/60 rounded-xl px-4 py-3 text-center">
-                <p className="text-[11px] text-amber-600 font-semibold uppercase">Coins</p>
-                <p className="text-[22px] font-bold text-indigo-900">🪙 {student.coins}</p>
-              </div>
-              <div className="flex-1 bg-white/60 rounded-xl px-4 py-3 text-center">
-                <p className="text-[11px] text-amber-600 font-semibold uppercase">Level</p>
-                <p className="text-[22px] font-bold text-indigo-900">⭐ {level}</p>
+        <section className="mt-8 sm:mt-10" aria-labelledby="badges-heading">
+          <Surface padding="lg">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="text-3xl" aria-hidden="true">🏅</span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-700">Little wins add up</p>
+                <h2 id="badges-heading" className="mt-1 text-xl font-bold tracking-tight text-indigo-950">Recent badges</h2>
               </div>
             </div>
-          </motion.div>
-
-          {/* Achievements */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="bg-white rounded-card border border-lavender-accent/20 p-6 shadow-card"
-          >
-            <h3 className="text-[16px] font-bold text-indigo-900 mb-4">🏅 Recent Badges</h3>
             {recentAchievements.length > 0 ? (
-              <div className="grid grid-cols-3 gap-3">
-                {recentAchievements.slice(0, 6).map((a, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ scale: 0 }} animate={{ scale: 1 }}
-                    transition={{ delay: 0.5 + i * 0.07, type: "spring" }}
-                    className="flex flex-col items-center gap-1 bg-sunshine-pastel rounded-xl p-3
-                               border border-sunshine-accent/40"
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                {recentAchievements.slice(0, 6).map((achievement, index) => (
+                  <motion.li
+                    key={`${achievement.name}-${index}`}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.04 * index, duration: 0.25 }}
+                    className="flex min-h-28 flex-col items-center justify-center gap-2 rounded-panel border border-sunshine-accent/50 bg-sunshine-pastel/70 p-3 text-center"
                   >
-                    <span className="text-3xl">{a.emoji}</span>
-                    <p className="text-[11px] font-semibold text-indigo-700 text-center leading-tight">{a.name}</p>
-                  </motion.div>
+                    <span className="text-3xl" aria-hidden="true">{achievement.emoji}</span>
+                    <span className="text-sm font-semibold leading-snug text-indigo-900">{achievement.name}</span>
+                  </motion.li>
                 ))}
-              </div>
+              </ul>
             ) : (
-              <div className="flex flex-col items-center justify-center h-32 gap-3 text-center">
-                <span className="text-5xl opacity-40">🏅</span>
-                <p className="text-[14px] text-indigo-400">Play a game to earn your first badge!</p>
+              <div className="flex flex-col items-center justify-center gap-2 rounded-panel bg-surface-soft px-4 py-6 text-center">
+                <span className="text-4xl opacity-70" aria-hidden="true">✨</span>
+                <p className="text-sm font-medium leading-relaxed text-muted">Play a game to earn your first badge!</p>
               </div>
             )}
-          </motion.div>
-        </div>
-      </div>
+          </Surface>
+        </section>
+      </PageContainer>
     </div>
   );
 }

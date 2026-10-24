@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { MotionConfig } from "framer-motion";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -80,7 +81,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         toggleReducedMotion,
       }}
     >
-      {children}
+      <MotionConfig reducedMotion={reducedMotion ? "always" : "user"}>
+        {children}
+      </MotionConfig>
     </AccessibilityContext.Provider>
   );
 }

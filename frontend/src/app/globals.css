@@ -22,32 +22,72 @@
 
 /* ─── CSS Custom Properties (design tokens) ─────────────────────────────── */
 :root {
-  /* Pastel palette */
-  --color-sky-pastel:      #E0F2FE;
-  --color-sky-accent:      #7DD3FC;
-  --color-mint-pastel:     #D1FAE5;
-  --color-mint-accent:     #6EE7B7;
-  --color-lavender-pastel: #EDE9FE;
-  --color-lavender-accent: #C4B5FD;
-  --color-peach-pastel:    #FEE2E2;
-  --color-peach-accent:    #FCA5A5;
-  --color-sunshine-pastel: #FEF9C3;
-  --color-sunshine-accent: #FDE047;
-  --color-page-bg:         #F8F7FF;
+  /* Brand palette */
+  --color-sky-pastel-rgb:      224 242 254;
+  --color-sky-accent-rgb:      125 211 252;
+  --color-mint-pastel-rgb:     209 250 229;
+  --color-mint-accent-rgb:     110 231 183;
+  --color-lavender-pastel-rgb: 224 242 254;
+  --color-lavender-accent-rgb: 125 211 252;
+  --color-peach-pastel-rgb:    254 226 226;
+  --color-peach-accent-rgb:    252 165 165;
+  --color-sunshine-pastel-rgb: 254 249 195;
+  --color-sunshine-accent-rgb: 253 224 71;
+  --color-page-bg-rgb:         239 246 255;
+
+  --color-sky-pastel:      rgb(var(--color-sky-pastel-rgb));
+  --color-sky-accent:      rgb(var(--color-sky-accent-rgb));
+  --color-mint-pastel:     rgb(var(--color-mint-pastel-rgb));
+  --color-mint-accent:     rgb(var(--color-mint-accent-rgb));
+  --color-lavender-pastel: rgb(var(--color-lavender-pastel-rgb));
+  --color-lavender-accent: rgb(var(--color-lavender-accent-rgb));
+  --color-peach-pastel:    rgb(var(--color-peach-pastel-rgb));
+  --color-peach-accent:    rgb(var(--color-peach-accent-rgb));
+  --color-sunshine-pastel: rgb(var(--color-sunshine-pastel-rgb));
+  --color-sunshine-accent: rgb(var(--color-sunshine-accent-rgb));
+  --color-page-bg:         rgb(var(--color-page-bg-rgb));
+
+  /* Semantic surfaces, text, borders, and feedback */
+  --color-ink:             #172554;
+  --color-text-muted:      #475569;
+  --color-text-subtle:     #64748b;
+  --color-focus:           #2563eb;
+  --color-border-subtle:   #dbeafe;
+  --color-border-strong:   #93c5fd;
+  --color-surface:         #ffffff;
+  --color-surface-warm:    #f8fbff;
+  --color-surface-soft:    #eff6ff;
+  --color-success-text:    #166534;
+  --color-warning-text:    #92400e;
+  --color-error-text:      #9a3412;
 
   /* Typography */
   --font-primary:   "Lexend", sans-serif;
   --font-dyslexic:  "OpenDyslexic", sans-serif;
+  --font-display:   "Lexend", sans-serif;
   --font-size-body: 18px;
   --font-size-game: 24px;
   --font-size-target: 36px;
   --letter-spacing: 0.05em;
   --word-spacing:   0.1em;
   --line-height:    1.8;
+  --line-height-heading: 1.25;
 
-  /* Radii */
+  /* Spacing and shape */
+  --space-page:    clamp(1rem, 3vw, 2rem);
+  --space-section: 2.5rem;
+  --space-card:    1.5rem;
+  --space-control: 0.75rem;
   --radius-card:   1.5rem;
+  --radius-panel:  1.25rem;
+  --radius-control: 0.75rem;
   --radius-button: 9999px;
+
+  /* Elevation */
+  --shadow-panel: 0 4px 24px 0 rgba(37, 99, 235, 0.07), 0 1px 4px 0 rgba(0, 0, 0, 0.04);
+  --shadow-panel-hover: 0 8px 32px 0 rgba(37, 99, 235, 0.12), 0 2px 8px 0 rgba(0, 0, 0, 0.06);
+  --shadow-action: 0 2px 12px 0 rgba(125, 211, 252, 0.25);
+  --shadow-action-mint: 0 2px 12px 0 rgba(110, 231, 183, 0.3);
 }
 
 /* ─── Base reset ─────────────────────────────────────────────────────────── */
@@ -69,7 +109,7 @@ body {
   line-height: var(--line-height);
   letter-spacing: var(--letter-spacing);
   word-spacing: var(--word-spacing);
-  color: #1e1b4b; /* deep indigo — softer than pure black */
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -88,9 +128,37 @@ body {
 
 /* ─── Focus ring (accessible, not harsh) ────────────────────────────────── */
 :focus-visible {
-  outline: 3px solid var(--color-lavender-accent);
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
   border-radius: 6px;
+}
+
+html[data-reduced-motion="true"] {
+  scroll-behavior: auto;
+}
+
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  html *,
+  html *::before,
+  html *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ─── Utility: No error red — never use .text-red-* in this project ──────── */

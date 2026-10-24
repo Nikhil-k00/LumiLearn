@@ -113,18 +113,20 @@ export function SoundSequence({ items, minLength, maxLength, onResult, onRoundCo
   };
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <section className="flex w-full flex-col items-center gap-6" aria-labelledby="sound-sequence-title">
       <div className="text-center">
-        <p className="text-game text-indigo-700 font-semibold">
+        <h2 id="sound-sequence-title" className="text-xl font-bold tracking-tight text-indigo-950 sm:text-2xl">
           {phase === "watching" ? "👀 Watch the sequence..." :
            phase === "input"    ? "🎯 Now tap in order!" :
            phase === "correct"  ? "🌟 Correct!" : "💪 Try again!"}
+        </h2>
+        <p className="mt-1 text-base leading-relaxed text-muted">
+          {phase === "watching" ? "Listen and watch each sound, then repeat them in order." : "Tap the sounds in the same order."}
         </p>
-        <p className="text-base text-indigo-400 mt-1">Sequence length: {seqLength}</p>
+        <p className="mt-2 text-sm font-semibold text-indigo-800">Sequence length: {seqLength}</p>
       </div>
 
-      {/* Orbs grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid w-full max-w-2xl grid-cols-2 justify-items-center gap-3 sm:grid-cols-3 sm:gap-5">
         {items.slice(0, 6).map((item) => (
           <motion.button
             key={item.id}
@@ -132,25 +134,37 @@ export function SoundSequence({ items, minLength, maxLength, onResult, onRoundCo
             transition={{ duration: 0.2 }}
             onClick={() => handleOrbTap(item)}
             disabled={phase !== "input"}
-            className={`w-32 h-32 rounded-full border-4 flex flex-col items-center justify-center
-                        shadow-card transition-all font-bold
-                        ${activeOrb === item.id ? "border-lavender-accent scale-105" : "border-transparent"}
+            aria-label={`${item.label}${activeOrb === item.id ? ", active sound" : ""}`}
+            aria-pressed={activeOrb === item.id}
+            className={`flex h-32 w-32 flex-col items-center justify-center rounded-full border-4 font-bold shadow-panel transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-default sm:h-36 sm:w-36 motion-reduce:transform-none
+                        ${activeOrb === item.id ? "border-indigo-800 ring-4 ring-indigo-700/20" : "border-transparent"}
                         ${item.color}`}
           >
-            <span className="text-6xl mb-1">{item.emoji}</span>
-            <span className="text-[14px] text-indigo-700 mt-1">{item.label}</span>
+            <span className="mb-1 text-5xl sm:text-6xl" aria-hidden="true">{item.emoji}</span>
+            <span className="mt-1 text-sm font-semibold text-indigo-950">{item.label}</span>
           </motion.button>
         ))}
       </div>
 
-      {/* Player progress */}
-      <div className="flex gap-2">
-        {sequence.map((_, i) => (
-          <div key={i} className={`w-3 h-3 rounded-full ${i < playerInput.length ? "bg-lavender-accent" : "bg-lavender-pastel"}`} />
-        ))}
+      <div className="w-full max-w-md" role="progressbar" aria-label="Sequence replay progress" aria-valuemin={0} aria-valuemax={sequence.length} aria-valuenow={playerInput.length}>
+        <div className="mb-2 flex items-center justify-between text-xs font-semibold text-muted">
+          <span>Your sequence</span><span>{playerInput.length} of {sequence.length}</span>
+        </div>
+        <div className="flex gap-2" aria-hidden="true">
+          {sequence.map((_, i) => (
+            <span key={i} className={`h-2.5 flex-1 rounded-full ${i < playerInput.length ? "bg-indigo-700" : "bg-lavender-pastel"}`} />
+          ))}
+        </div>
       </div>
 
-      <p className="text-base text-indigo-400">Round {round + 1} / 6</p>
-    </div>
+      <p className="text-sm font-semibold tabular-nums text-muted" aria-label={`Round ${round + 1} of 6`}>
+        Round {round + 1} of 6
+      </p>
+      {(phase === "correct" || phase === "wrong") && (
+        <p className="text-base font-semibold text-indigo-950" role="status" aria-live="polite">
+          {phase === "correct" ? "✓ Sequence remembered!" : "↻ Not quite. Listen to the next sequence."}
+        </p>
+      )}
+    </section>
   );
 }

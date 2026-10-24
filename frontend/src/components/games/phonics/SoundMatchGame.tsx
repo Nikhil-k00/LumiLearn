@@ -77,42 +77,44 @@ export function SoundMatchGame({ words, onAnswer, onRoundComplete }: SoundMatchG
   if (!current) return null;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full">
+    <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 sm:gap-8" aria-label="Sound Match">
       {/* Target — play audio, show emoji */}
       <motion.div
         key={current.word}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center gap-3"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex w-full flex-col items-center gap-4"
       >
-        <button
-          onClick={() => speak(current.audioHint, 0.75)}
-          className="w-32 h-32 rounded-card bg-sunshine-pastel border-2 border-sunshine-accent
-                     flex flex-col items-center justify-center shadow-card hover:shadow-card-hover
-                     transition-all text-6xl"
-          aria-label={`Hear the sound: ${current.audioHint}`}
-        >
-          {current.emoji}
-        </button>
-        <p className="text-game text-indigo-700 font-semibold">Which letter does this start with?</p>
-        <button
-          onClick={() => speak(current.word, 0.8)}
-          className="flex items-center gap-2 px-4 py-2 rounded-button bg-sky-pastel text-sky-700
-                     border border-sky-accent text-base font-medium"
-        >
-          <Volume2 size={18} /> Hear it again
-        </button>
+        <div className="flex w-full max-w-xl flex-col items-center gap-4 rounded-panel border border-sunshine-accent/40 bg-sunshine-pastel/60 p-5 text-center sm:p-7">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-800">Listen, then choose the first letter</p>
+          <button
+            type="button"
+            onClick={() => speak(current.audioHint, 0.75)}
+            className="flex h-28 w-28 items-center justify-center rounded-panel border-2 border-sunshine-accent bg-white text-6xl shadow-panel transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 sm:h-32 sm:w-32"
+            aria-label={`Hear the sound: ${current.audioHint}`}
+          >
+            <span aria-hidden="true">{current.emoji}</span>
+          </button>
+          <h2 className="text-xl font-bold leading-relaxed text-indigo-950 sm:text-2xl">Which letter does this start with?</h2>
+          <button
+            type="button"
+            onClick={() => speak(current.word, 0.8)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-control border border-sky-accent bg-sky-pastel px-4 py-2 text-sm font-semibold text-indigo-900 transition-colors hover:bg-sky-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+          >
+            <Volume2 size={18} aria-hidden="true" /> Hear the word again
+          </button>
+        </div>
       </motion.div>
 
       {/* Streak indicator */}
       {streak >= 2 && (
-        <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-2xl">
+        <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="text-lg font-semibold text-amber-900" aria-live="polite">
           {"🔥".repeat(Math.min(streak, 5))} {streak} in a row!
         </motion.p>
       )}
 
       {/* Options */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid w-full max-w-xl grid-cols-2 gap-3 sm:gap-4" role="group" aria-label="Choose the starting letter">
         {options.map((opt) => (
           <LetterCard
             key={opt.word}
@@ -125,13 +127,29 @@ export function SoundMatchGame({ words, onAnswer, onRoundComplete }: SoundMatchG
               : selected === opt.word  ? "wrong"
               : "default"
             }
+            disabled={feedback !== "idle"}
+            selected={selected === opt.word}
             onClick={() => handleSelect(opt)}
           />
         ))}
       </div>
 
+      {feedback !== "idle" && (
+        <p className={`rounded-control border px-5 py-3 text-lg font-semibold ${feedback === "correct" ? "border-mint-accent/50 bg-mint-pastel text-success" : "border-peach-accent/60 bg-peach-pastel text-error-text"}`} role="status" aria-live="polite">
+          {feedback === "correct" ? `Yes! ${current.word} starts with ${current.word[0].toUpperCase()}.` : `Good try! ${current.word} starts with ${current.word[0].toUpperCase()}.`}
+        </p>
+      )}
+
       {/* Progress */}
-      <p className="text-base text-indigo-400">{index + 1} / {queue.length}</p>
-    </div>
+      <div className="w-full max-w-xl">
+        <div className="mb-2 flex items-center justify-between text-sm font-semibold text-indigo-900">
+          <span>Question {index + 1} of {queue.length}</span>
+          <span>{Math.round(((index + 1) / queue.length) * 100)}%</span>
+        </div>
+        <div className="h-2.5 overflow-hidden rounded-full bg-surface-soft" role="progressbar" aria-label="Sound Match progress" aria-valuemin={0} aria-valuemax={queue.length} aria-valuenow={index + 1}>
+          <div className="h-full rounded-full bg-sky-accent transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${((index + 1) / queue.length) * 100}%` }} />
+        </div>
+      </div>
+    </section>
   );
 }

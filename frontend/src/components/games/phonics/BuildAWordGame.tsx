@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Volume2 } from "lucide-react";
 import { useTTS } from "@/hooks/useTTS";
 import type { PhonicsWord } from "@/data/phonics-content";
+import { Button } from "@/components/ui/Button";
 
 interface BuildAWordGameProps {
   words: PhonicsWord[];
@@ -118,37 +119,49 @@ export function BuildAWordGame({ words, onAnswer, onRoundComplete }: BuildAWordG
   if (!current) return null;
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full">
+    <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-5 sm:gap-6" aria-label="Build a Word">
       {/* Target picture */}
       <motion.div
         key={current.word}
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center gap-2"
+        className="flex w-full flex-col items-center"
       >
-        <div className="text-8xl">{current.emoji}</div>
-        <button
-          onClick={() => speak(current.word, 0.8)}
-          className="flex items-center gap-2 px-4 py-2 rounded-button bg-sky-pastel border border-sky-accent text-base"
-        >
-          <Volume2 size={16} /> Hear it
-        </button>
+        <div className="flex w-full max-w-xl flex-col items-center gap-3 rounded-panel border border-sky-accent/40 bg-sky-pastel/60 p-5 text-center sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-800">Build the word</p>
+          <span className="text-7xl leading-none sm:text-8xl" aria-hidden="true">{current.emoji}</span>
+          <p className="text-lg font-semibold text-indigo-950">Tap the letters in order to spell it.</p>
+          <button
+            type="button"
+            onClick={() => speak(current.word, 0.8)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-control border border-sky-accent bg-white px-4 py-2 text-sm font-semibold text-indigo-900 transition-colors hover:bg-sky-pastel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+            aria-label="Hear the word"
+          >
+            <Volume2 size={18} aria-hidden="true" /> Hear the word
+          </button>
+        </div>
       </motion.div>
 
       {/* Assembly area */}
-      <div className="flex gap-3 min-h-[72px] items-center bg-white/60 rounded-card px-6 py-3 shadow-card border border-lavender-accent/30">
+      <div
+        className="flex min-h-20 w-full max-w-2xl flex-wrap items-center justify-center gap-2 rounded-panel border border-lavender-accent/40 bg-white p-3 shadow-panel sm:gap-3 sm:p-4"
+        role="group"
+        aria-label="Your word, tap a letter to remove it"
+        aria-live="polite"
+      >
         {assembled.length === 0 && (
-          <p className="text-indigo-300 text-game">Tap letters to spell the word</p>
+          <p className="px-2 text-center text-base font-medium text-muted">Your letters will appear here</p>
         )}
         {assembled.map((letter, i) => (
           <motion.button
             key={`${letter}-${i}`}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-14 h-14 rounded-xl bg-mint-pastel border-2 border-mint-accent
-                       text-game-target font-bold text-indigo-900 shadow-card"
+            type="button"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            disabled={feedback !== "idle"}
+            className="inline-flex h-12 min-w-12 items-center justify-center rounded-control border-2 border-mint-accent bg-mint-pastel px-3 text-2xl font-bold text-indigo-950 shadow-panel transition-colors hover:bg-mint-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-default sm:h-14 sm:min-w-14 sm:text-3xl"
             onClick={() => removeLetter(i)}
-            aria-label={`Remove ${letter}`}
+            aria-label={`Remove letter ${letter}`}
           >
             {letter}
           </motion.button>
@@ -156,13 +169,14 @@ export function BuildAWordGame({ words, onAnswer, onRoundComplete }: BuildAWordG
       </div>
 
       {/* Letter pool */}
-      <div className="flex flex-wrap gap-3 justify-center">
+      <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2 sm:gap-3" role="group" aria-label="Available letters">
         {letters.map((letter, i) => (
           <motion.button
             key={`pool-${letter}-${i}`}
-            whileTap={{ scale: 0.9 }}
-            className="w-16 h-16 rounded-xl bg-lavender-pastel border-2 border-lavender-accent
-                       text-game-target font-bold text-indigo-900 shadow-card hover:shadow-card-hover"
+            type="button"
+            whileTap={feedback === "idle" ? { scale: 0.96 } : undefined}
+            disabled={feedback !== "idle"}
+            className="inline-flex h-14 min-w-14 items-center justify-center rounded-control border-2 border-lavender-accent bg-lavender-pastel px-3 text-2xl font-bold text-indigo-950 shadow-panel transition-colors hover:bg-lavender-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-default sm:h-16 sm:min-w-16 sm:text-3xl"
             onClick={() => pickLetter(letter, i)}
             aria-label={`Pick ${letter}`}
           >
@@ -173,29 +187,32 @@ export function BuildAWordGame({ words, onAnswer, onRoundComplete }: BuildAWordG
 
       {/* Check button */}
       {assembled.length === current.phonemes.length && feedback === "idle" && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          onClick={checkAnswer}
-          className="px-8 py-3 rounded-button bg-mint-accent text-white font-semibold text-lg shadow-btn-mint"
-        >
-          Check ✓
-        </motion.button>
+        <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}>
+          <Button size="lg" onClick={checkAnswer}>Check answer <span aria-hidden="true">✓</span></Button>
+        </motion.div>
       )}
 
       {/* Feedback */}
       {feedback === "correct" && (
-        <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-2xl font-bold text-mint-accent">
+        <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="rounded-control border border-mint-accent/50 bg-mint-pastel px-5 py-3 text-lg font-bold text-success" role="status" aria-live="polite">
           🌟 Amazing!
         </motion.p>
       )}
       {feedback === "wrong" && (
-        <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-xl text-peach-accent font-semibold">
+        <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="rounded-control border border-peach-accent/60 bg-peach-pastel px-5 py-3 text-lg font-semibold text-error-text" role="status" aria-live="polite">
           Try again! 💪
         </motion.p>
       )}
 
-      <p className="text-base text-indigo-400">{index + 1} / {queue.length}</p>
-    </div>
+      <div className="w-full max-w-xl">
+        <div className="mb-2 flex items-center justify-between text-sm font-semibold text-indigo-900">
+          <span>Question {index + 1} of {queue.length}</span>
+          <span>{Math.round(((index + 1) / queue.length) * 100)}%</span>
+        </div>
+        <div className="h-2.5 overflow-hidden rounded-full bg-surface-soft" role="progressbar" aria-label="Build a Word progress" aria-valuemin={0} aria-valuemax={queue.length} aria-valuenow={index + 1}>
+          <div className="h-full rounded-full bg-mint-accent transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${((index + 1) / queue.length) * 100}%` }} />
+        </div>
+      </div>
+    </section>
   );
 }
