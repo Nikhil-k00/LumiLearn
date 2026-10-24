@@ -11,6 +11,7 @@ import analyticsRoutes from "./routes/analyticsRoutes";
 dotenv.config();
 
 const app: Application = express();
+app.set("trust proxy", 1);
 
 // ─── Security & CORS ───────────────────────────────────────────────────────
 
